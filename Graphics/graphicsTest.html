@@ -25,7 +25,7 @@
 					var aspect;
 					var vbuffer;
 					var program;
-					var index; //temp until the buffer class is ready
+					//var index; //temp until the buffer class is ready
 
 					function init()
 					{
@@ -69,16 +69,14 @@
 						var toDraw = new Vertices(maxUnits); //new Float32Array(maxUnits * 12); //12 points per unit?
 						index = 0
 
-						// var arr = [-0.25, 0*aspect, 0, 0*aspect,  0, -0.25*aspect,  // Triangle 1
-						// 	-0.25, 0*aspect, 0, -0.25*aspect, -0.25, -0.25*aspect]   // Triangle 2
-
-						r1 = new Rectangle(0, 0, 0, 1);
-						r2 = new Rectangle(0, 0, 0, 2);
+						r1 = new Rectangle([0.25, 0.25], 0.25, 0.25);
+						r2 = new Rectangle([0, 0], 0.25, 0.25);
+						r3 = new Rectangle([0, 0.25], 0.25, 0.25);
+						r4 = new Rectangle([0.25, 0], 0.25, 0.25);
+						
 						r1.draw(toDraw);
 						r2.draw(toDraw);
-						// drawRect(vertices, 0, 0, 0);
-						// drawAnotherRect(vertices, 0, 0, 0);
-
+						
 						itemSize = 2;
 						numItems = toDraw.v.length / itemSize;
 
@@ -93,7 +91,7 @@
 						gl.vertexAttribPointer(program.aVertexPosition, itemSize, gl.FLOAT, false, 0, 0);
 						
 						//draw
-						gl.drawArrays(gl.TRIANGLES, 0, numItems);
+						drawInterval = setInterval(gl.drawArrays(gl.TRIANGLES, 0, numItems), 16);
 					}
 
 					function Vertices(maxUnits)
@@ -102,34 +100,17 @@
 						this.index = 0;
 					}
 
-					function Rectangle(center, width, height, temp)
+					function Rectangle(center, width, height)
 					{
 						/*
 						Class for rectangles
 						*/
-						if(temp == 1)
-						{
-							this.screenPos = [-0.25, 0*aspect, 0, 0*aspect,  0, -0.25*aspect,  // Triangle 1
-									-0.25, 0*aspect, 0, -0.25*aspect, -0.25, -0.25*aspect];   // Triangle 2
-						}
-						else if(temp == 2)
-						{
-							this.screenPos = [0, .25*aspect, .25, .25*aspect,  .25, 0*aspect,  // Triangle 1
-							0, .25*aspect, .25, 0*aspect, 0, 0*aspect];   // Triangle 2
-						}
-
-						//this.draw();
-						// for (i=0; i < this.screenPos.length; i++)
-						// {
-						// 	vertices.v[vertices.index+i] = this.screenPos[i];
-						// }
-						// vertices.index += this.screenPos.length;
-
-						// vbuffer = gl.createBuffer();
-						// gl.bindBuffer(gl.ARRAY_BUFFER, vbuffer);                                       
-						// gl.bufferData(gl.ARRAY_BUFFER, vertices.v, gl.STATIC_DRAW);
-
-						// vertices.index += this.screenPos.length;
+						this.screenPos = [center[0] - (width / 2), (center[1] + (height / 2)) * aspect,
+										center[0] + (width / 2), (center[1] + (height / 2)) * aspect,
+										center[0] - (width / 2), (center[1] - (height / 2)) * aspect,
+										center[0] - (width / 2), (center[1] - (height / 2)) * aspect,
+										center[0] + (width / 2), (center[1] + (height / 2)) * aspect,
+										center[0] + (width / 2), (center[1] - (height / 2)) * aspect];
 						
 					}
 
@@ -146,44 +127,6 @@
 						gl.bufferData(gl.ARRAY_BUFFER, toDraw.v, gl.STATIC_DRAW);
 
 						toDraw.index += this.screenPos.length;
-					}
-
-					function drawRect(vertices, center, width, height)
-					{
-						//TODO: replace with 
-
-						var arr = [-0.25, 0*aspect, 0, 0*aspect,  0, -0.25*aspect,  // Triangle 1
-							-0.25, 0*aspect, 0, -0.25*aspect, -0.25, -0.25*aspect]   // Triangle 2
-
-						for (i=0; i < arr.length; i++)
-						{
-							vertices.v[vertices.index+i] = arr[i];
-						}
-						vertices.index += arr.length;
-
-						vbuffer = gl.createBuffer();
-						gl.bindBuffer(gl.ARRAY_BUFFER, vbuffer);                                       
-						gl.bufferData(gl.ARRAY_BUFFER, vertices.v, gl.STATIC_DRAW);
-
-						return vertices;
-					}
-
-					function drawAnotherRect(vertices, center, width, height)
-					{
-						var arr = [0, .25*aspect, .25, .25*aspect,  .25, 0*aspect,  // Triangle 1
-							0, .25*aspect, .25, 0*aspect, 0, 0*aspect]   // Triangle 2
-
-						for (i=0; i < arr.length; i++)
-						{
-							vertices.v[vertices.index+i] = arr[i];
-						}
-						vertices.index += arr.length;
-
-						vbuffer = gl.createBuffer();
-						gl.bindBuffer(gl.ARRAY_BUFFER, vbuffer);                                       
-						gl.bufferData(gl.ARRAY_BUFFER, vertices.v, gl.STATIC_DRAW);
-
-						return vertices;
 					}
 
 
