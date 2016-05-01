@@ -67,36 +67,64 @@
 						aspect = canvas.width / canvas.height;
 
 						maxUnits = 1000 //temp
-						var toDraw = new Vertices(maxUnits); //new Float32Array(maxUnits * 12); //12 points per unit?
-						index = 0
+						var toDraw = new DrawGroup(maxUnits); //new Float32Array(maxUnits * 12); //12 points per unit?
 
 						r1 = new Rectangle([0.25, 0.25], 0.25, 0.25);
 						r2 = new Rectangle([0, 0], 0.25, 0.25);
 						r3 = new Rectangle([0, 0.25], 0.25, 0.25);
 						r4 = new Rectangle([0.25, 0], 0.25, 0.25);
-						
-						r3.draw(toDraw);
-						r4.draw(toDraw);
-						
-						toDraw.render();
-						toDraw.clear();
+
+						toDraw.group.push(r1);
+						toDraw.group.push(r2);
+
+
+						function drawLoop()
+						{
+							//toDraw.clear();
+							gl.clear(gl.COLOR_BUFFER_BIT);
+							// for(i=0; i < toDraw.group.length; i++)
+							// {
+							// 	toDraw.group[i].draw(toDraw);
+							// }
+							r1.draw(toDraw);
+							r2.draw(toDraw);
+
+							toDraw.render();
+						}
+
+						//setInterval(drawLoop, 16);
 						gl.clear(gl.COLOR_BUFFER_BIT);
-						r1.draw(toDraw);
-						r2.draw(toDraw);
+						var i;
+						for(i=0; i < toDraw.group.length; i++)
+						{
+							console.log(i);
+							console.log('TestMe');
+							console.log(toDraw.group.length)
+							toDraw.group[i].draw(toDraw);
+							console.log(i);
+						}
+						// r1.draw(toDraw);
+						// r2.draw(toDraw);
+						// gl.clear(gl.COLOR_BUFFER_BIT);
+						// toDraw.clear();
+						// r3.draw(toDraw);
+						// r4.draw(toDraw);
 						toDraw.render();
 					}
 
-					function Vertices(maxUnits)
+					function DrawGroup(maxUnits)
 					{
 						this.v = new Float32Array(maxUnits*12);
+						var i;
 						for(i=0; i < this.v.length; i++)
 						{
 							this.v[i] = 0;
 						}
 						this.index = 0;
+						this.group = [];
 					}
 
-					Vertices.prototype.render = function()
+					DrawGroup.prototype.render = function()
 					{
 						itemSize = 2;
 						numItems = this.v.length / itemSize;
@@ -113,8 +141,9 @@
 						gl.drawArrays(gl.TRIANGLES, 0, numItems)
 					}
 
-					Vertices.prototype.clear = function()
+					DrawGroup.prototype.clear = function()
 					{
+						var i;
 						for (i=0; i < this.v.length; i++)
 						{
 							if(this.v[i] != 0)
@@ -123,8 +152,6 @@
 							}
 						}
 						this.index = 0;
-						gl.bindBuffer(gl.ARRAY_BUFFER, vbuffer);                                       
-						gl.bufferData(gl.ARRAY_BUFFER, this.v, gl.STATIC_DRAW);
 					}
 
 					function Rectangle(center, width, height)
@@ -143,6 +170,7 @@
 
 					Rectangle.prototype.draw = function(toDraw) //adds its info to the buffer
 					{
+						var i;
 						for (i=0; i < this.screenPos.length; i++)
 						{
 							toDraw.v[toDraw.index+i] = this.screenPos[i];
