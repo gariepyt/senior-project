@@ -25,6 +25,7 @@
 					var aspect;
 					var vbuffer;
 					var program;
+					var gl;
 					//var index; //temp until the buffer class is ready
 
 					function init()
@@ -74,11 +75,29 @@
 						r3 = new Rectangle([0, 0.25], 0.25, 0.25);
 						r4 = new Rectangle([0.25, 0], 0.25, 0.25);
 						
+						r3.draw(toDraw);
+						r4.draw(toDraw);
+						
+						toDraw.render();
 						r1.draw(toDraw);
 						r2.draw(toDraw);
-						
+						toDraw.render();
+					}
+
+					function Vertices(maxUnits)
+					{
+						this.v = new Float32Array(maxUnits*12);
+						for(i=0; i < this.v.length; i++)
+						{
+							this.v[i] = 0;
+						}
+						this.index = 0;
+					}
+
+					Vertices.prototype.render = function()
+					{
 						itemSize = 2;
-						numItems = toDraw.v.length / itemSize;
+						numItems = this.v.length / itemSize;
 
 						//gl
 						gl.useProgram(program);
@@ -89,15 +108,21 @@
 						program.aVertexPosition = gl.getAttribLocation(program, "aVertexPosition"); //get vertex position from program
 						gl.enableVertexAttribArray(program.aVertexPosition);
 						gl.vertexAttribPointer(program.aVertexPosition, itemSize, gl.FLOAT, false, 0, 0);
-						
-						//draw
-						drawInterval = setInterval(gl.drawArrays(gl.TRIANGLES, 0, numItems), 16);
+						gl.drawArrays(gl.TRIANGLES, 0, numItems)
 					}
 
-					function Vertices(maxUnits)
+					Vertices.prototype.clear = function()
 					{
-						this.v = new Float32Array(maxUnits*12);
+						for (i=0; i < this.v.length; i++)
+						{
+							if(this.v[i] != 0)
+							{
+								this.v[i] = 0;
+							}
+						}
 						this.index = 0;
+						gl.bindBuffer(gl.ARRAY_BUFFER, vbuffer);                                       
+						gl.bufferData(gl.ARRAY_BUFFER, this.v, gl.STATIC_DRAW);
 					}
 
 					function Rectangle(center, width, height)
