@@ -78,38 +78,48 @@
 						toDraw.group.push(r2);
 
 
+						var groupToDraw = 0;
+						function update()
+						{
+							if (groupToDraw == 0)
+							{
+								toDraw.group = []
+								toDraw.group.push(r1);
+								toDraw.group.push(r2);
+								groupToDraw = 1;
+							}
+							else
+							{
+								toDraw.group = []
+								toDraw.group.push(r3);
+								toDraw.group.push(r4);
+								groupToDraw = 0;
+							}
+						}
+
 						function drawLoop()
 						{
-							//toDraw.clear();
+							toDraw.clear();
 							gl.clear(gl.COLOR_BUFFER_BIT);
-							// for(i=0; i < toDraw.group.length; i++)
-							// {
-							// 	toDraw.group[i].draw(toDraw);
-							// }
-							r1.draw(toDraw);
-							r2.draw(toDraw);
+							var i;
+							for(i=0; i < toDraw.group.length; i++)
+							{
+								toDraw.group[i].draw(toDraw);
+							}
 
 							toDraw.render();
 						}
 
-						//setInterval(drawLoop, 16);
-						gl.clear(gl.COLOR_BUFFER_BIT);
-						var i;
-						for(i=0; i < toDraw.group.length; i++)
-						{
-							console.log(i);
-							console.log('TestMe');
-							console.log(toDraw.group.length)
-							toDraw.group[i].draw(toDraw);
-							console.log(i);
-						}
+						setInterval(update, 1000);
+
+						setInterval(drawLoop, 16);
+						
 						// r1.draw(toDraw);
 						// r2.draw(toDraw);
 						// gl.clear(gl.COLOR_BUFFER_BIT);
 						// toDraw.clear();
 						// r3.draw(toDraw);
 						// r4.draw(toDraw);
-						toDraw.render();
 					}
 
 					function DrawGroup(maxUnits)
