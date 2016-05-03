@@ -30,14 +30,49 @@
 
 					function init()
 					{
-						//set up canvas and webgl context
 						canvas = document.getElementById("mycanvas");
+
+						/*========================= CAPTURE MOUSE EVENTS ========================= */
+						var drag=false;
+						var old_x, old_y;
+
+						var mouseDown=function(e) 
+						{
+							drag=true;
+							old_x=e.pageX, old_y=e.pageY;
+							console.log(old_x);
+							console.log(old_y);
+							e.preventDefault();
+							return false;
+						};
+
+						var mouseUp=function(e)
+						{
+							drag=false;
+						};
+
+						var mouseMove=function(e) 
+						{
+							if (!drag) return false;
+							var dX=e.pageX-old_x,
+							    dY=e.pageY-old_y;
+							THETA+=dX*2*Math.PI/canvas.width;
+							PHI+=dY*2*Math.PI/canvas.height;
+							old_x=e.pageX, old_y=e.pageY;
+							e.preventDefault();
+						};
+
+						canvas.addEventListener("mousedown", mouseDown, false);
+						canvas.addEventListener("mouseup", mouseUp, false);
+						canvas.addEventListener("mouseout", mouseUp, false);
+						canvas.addEventListener("mousemove", mouseMove, false);
+
+						/*========================= CANVAS AND SHADERS ========================= */
 					    gl = canvas.getContext("experimental-webgl"); //
 						gl.viewport(0, 0, canvas.width, canvas.height);
 						gl.clearColor(0, 0.5, 0, 1); //drawing viewfinder color
 						gl.clear(gl.COLOR_BUFFER_BIT);
 						
-						// compile and set up shaders
 			    		var v = document.getElementById("vertex").firstChild.nodeValue;
 						var f = document.getElementById("fragment").firstChild.nodeValue;
 						 
@@ -113,13 +148,6 @@
 						setInterval(update, 1000);
 
 						setInterval(drawLoop, 16);
-						
-						// r1.draw(toDraw);
-						// r2.draw(toDraw);
-						// gl.clear(gl.COLOR_BUFFER_BIT);
-						// toDraw.clear();
-						// r3.draw(toDraw);
-						// r4.draw(toDraw);
 					}
 
 					function DrawGroup(maxUnits)
