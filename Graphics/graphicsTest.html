@@ -105,7 +105,7 @@
 						maxUnits = 1000 //temp
 						var toDraw = new DrawGroup(maxUnits); //new Float32Array(maxUnits * 12); //12 points per unit?
 
-						r1 = new Rectangle([0, 0], 0.25, 0.25);
+						r1 = new Rectangle([0, -1], 0.125, 0.125);
 						r2 = new Rectangle([0, 0], 0.25, 0.25);
 						r3 = new Rectangle([0, 0.25], 0.25, 0.25);
 						r4 = new Rectangle([0.25, 0], 0.25, 0.25);
@@ -160,7 +160,7 @@
 							toDraw.render();
 						}
 
-						setInterval(update, 20);
+						setInterval(update, 1);
 
 						setInterval(drawLoop, 16);
 					}
@@ -215,17 +215,7 @@
 						this.width = width;
 						this.height = height;
 						this.setPos(center, width, height);
-						// this.screenPos = [center[0] - (width / 2), (center[1] + (height / 2)) * aspect,
-						// 				center[0] + (width / 2), (center[1] + (height / 2)) * aspect,
-						// 				center[0] - (width / 2), (center[1] - (height / 2)) * aspect,
-						// 				center[0] - (width / 2), (center[1] - (height / 2)) * aspect,
-						// 				center[0] + (width / 2), (center[1] + (height / 2)) * aspect,
-						// 				center[0] + (width / 2), (center[1] - (height / 2)) * aspect];
-
-						// this.top = center[1] + (height / 2) * aspect;
-						// this.bottom = center[1] - (height / 2) * aspect;
-						// this.right = center[0] + (width / 2);
-						// this.left = center[0] - (width / 2);
+						this.selected = false;
 					}
 
 					Rectangle.prototype.draw = function(toDraw) //adds its info to the buffer
@@ -246,36 +236,60 @@
 
 					Rectangle.prototype.mouseDown = function(posx, posy)
 					{
-						//TODO: replace with changing the color of the piece
-						// console.log(this.top);
-						// console.log(this.bottom);
-						// console.log(this.left);
-						// console.log(this.right);
-						// console.log((posx / canvas.width) - 0.5);
-						// console.log((posy / canvas.height) - 0.5);
-						normalX = (posx / canvas.width) - 0.5;
-						normalY = (posy / canvas.height) - 0.5;
-						if (normalX < this.right && normalX > this.left &&
-							normalY < this.top && normalY > this.bottom)
+						//TODO: replace selection to changing the color of the piece
+						//TODO: Selection code is a little buggy! fix me
+						normalX = 2 * ((posx / canvas.width) - 1);
+						normalY = 2 * ((posy / canvas.height) + 1);
+						console.log(posx);
+						console.log(posy);
+						console.log(canvas.width);
+						console.log(canvas.height);
+						console.log(normalX);
+						console.log(normalY);
+						if (!this.selected)
 						{
-							console.log("Selected");
-						} 
+							if (normalX < this.right && normalX > this.left &&
+								normalY < this.top && normalY > this.bottom)
+							{
+								this.selected = true;
+								console.log("Selected");
+							} 
+							else
+							{
+								console.log("Not selected");
+							}
+						}
 						else
 						{
-							console.log("Not selected");
+							if (normalX < this.right && normalX > this.left &&
+								normalY < this.top && normalY > this.bottom)
+							{
+								this.selected = false;
+								console.log("deslected");
+							} 
+							else 
+							{
+								this.moveTo([normalX, normalY]);
+							}
 						}
+					}
+
+					Rectangle.prototype.moveTo = function(newPos)
+					{
+						this.setPos(newPos); //TODO: replace with pathfinding code!
 					}
 
 					Rectangle.prototype.setPos = function(center)
 					{
-						this.screenPos = [center[0] - (this.width / 2), (center[1] + (this.height / 2)) * aspect,
-										center[0] + (this.width / 2), (center[1] + (this.height / 2)) * aspect,
-										center[0] - (this.width / 2), (center[1] - (this.height / 2)) * aspect,
-										center[0] - (this.width / 2), (center[1] - (this.height / 2)) * aspect,
-										center[0] + (this.width / 2), (center[1] + (this.height / 2)) * aspect,
-										center[0] + (this.width / 2), (center[1] - (this.height / 2)) * aspect];
+						console.log(aspect)
+						this.screenPos = [center[0] - (this.width / 2), center[1] + (this.height / 2) * aspect ,
+										center[0] + (this.width / 2), center[1] + (this.height / 2) * aspect ,
+										center[0] - (this.width / 2), center[1] - (this.height / 2) * aspect ,
+										center[0] - (this.width / 2), center[1] - (this.height / 2) * aspect ,
+										center[0] + (this.width / 2), center[1] + (this.height / 2) * aspect ,
+										center[0] + (this.width / 2), center[1] - (this.height / 2) * aspect ];
 
-						this.top = center[1] + (this.height / 2) * aspect;
+						this.top = center[1] + (this.height / 2)  * aspect;
 						this.bottom = center[1] - (this.height / 2) * aspect;
 						this.right = center[0] + (this.width / 2);
 						this.left = center[0] - (this.width / 2);
