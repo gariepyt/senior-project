@@ -23,10 +23,8 @@
 
 					var gl;
 					var aspect;
-					var vbuffer;
+					//var vbuffer;
 					var program;
-					var gl;
-					//var index; //temp until the buffer class is ready
 
 					function init()
 					{
@@ -102,43 +100,31 @@
 						//set up arrays
 						aspect = canvas.width / canvas.height;
 
-						maxUnits = 1000 //temp
-						var toDraw = new DrawGroup(maxUnits); //new Float32Array(maxUnits * 12); //12 points per unit?
+						maxUnits = 100 //temp
+						var toDraw = new DrawGroup(maxUnits, [0.0, 0.3, 0.0, 1.0]); 
+						var selected = new DrawGroup(maxUnits, [0.0, 1, 0.0, 1.0]);
+						var myGroups = [toDraw, selected];
 
 						r1 = new Rectangle([0, 0], 0.125, 0.125);
-						r2 = new Rectangle([0, 0], 0.25, 0.25);
+						r2 = new Rectangle([.5, .5], 0.125, 0.125);
 						r3 = new Rectangle([0, 0.25], 0.25, 0.25);
 						r4 = new Rectangle([0.25, 0], 0.25, 0.25);
 
 						toDraw.group.push(r1);
-						//toDraw.group.push(r2);
+						selected.group.push(r2);
 
-
-						var groupToDraw = 0;
 						function update()
 						{
-							// if (groupToDraw == 0)
-							// {
-							// 	toDraw.group = []
-							// 	toDraw.group.push(r1);
-							// 	toDraw.group.push(r2);
-							// 	groupToDraw = 1;
-							// }
-							// else
-							// {
-							// 	toDraw.group = []
-							// 	toDraw.group.push(r3);
-							// 	toDraw.group.push(r4);
-							// 	groupToDraw = 0;
-							// }
-
 							if (mouseDownEvent)
 							{
 								mouseDownEvent = false;	
-								var i; 
-								for(i=0; i < toDraw.group.length; i++)
+								var i; var j;
+								for(i=0; i < myGroups.length; i++)
 								{
-									toDraw.group[i].mouseDown(old_x, old_y);
+									for(j=0; j < myGroups[i].group.length; j++)
+									{
+										myGroups[i].group[j].mouseDown(old_x, old_y);
+									}
 								}
 							}
 							else if (mouseUpEvent)
@@ -151,13 +137,22 @@
 						{
 							toDraw.clear();
 							gl.clear(gl.COLOR_BUFFER_BIT);
-							var i;
-							for(i=0; i < toDraw.group.length; i++)
+							var i; var j;
+							for(i=0; i < myGroups.length; i++)
 							{
-								toDraw.group[i].draw(toDraw);
+								for(j=0; j < myGroups[i].group.length; j++)
+								{
+									myGroups[i].group[j].draw(myGroups[i]);
+								}
+								myGroups[i].render()
 							}
+							// var i;
+							// for(i=0; i < toDraw.group.length; i++)
+							// {
+							// 	toDraw.group[i].draw(toDraw);
+							// }
 
-							toDraw.render();
+							// toDraw.render();
 						}
 
 						setInterval(update, 1);
@@ -165,7 +160,7 @@
 						setInterval(drawLoop, 16);
 					}
 
-					function DrawGroup(maxUnits)
+					function DrawGroup(maxUnits, color)
 					{
 						this.v = new Float32Array(maxUnits*12);
 						var i;
@@ -175,6 +170,7 @@
 						}
 						this.index = 0;
 						this.group = [];
+						this.color = color;
 					}
 
 					DrawGroup.prototype.render = function()
@@ -186,7 +182,7 @@
 						gl.useProgram(program);
      
 						program.uColor = gl.getUniformLocation(program, "uColor"); //get color from program
-						gl.uniform4fv(program.uColor, [0.0, 0.3, 0.0, 1.0]); //set color
+						gl.uniform4fv(program.uColor, this.color); //set color
 
 						program.aVertexPosition = gl.getAttribLocation(program, "aVertexPosition"); //get vertex position from program
 						gl.enableVertexAttribArray(program.aVertexPosition);
@@ -227,7 +223,7 @@
 						}
 						toDraw.index += this.screenPos.length;
 
-						vbuffer = gl.createBuffer();
+						var vbuffer = gl.createBuffer();
 						gl.bindBuffer(gl.ARRAY_BUFFER, vbuffer);                            
 						gl.bufferData(gl.ARRAY_BUFFER, toDraw.v, gl.STATIC_DRAW);
 
@@ -258,7 +254,7 @@
 								normalY < this.top && normalY > this.bottom)
 							{
 								this.selected = false;
-								console.log("deslected");
+								console.log("deselected");
 							} 
 							else 
 							{
@@ -274,7 +270,6 @@
 
 					Rectangle.prototype.setPos = function(center)
 					{
-						console.log(aspect)
 						this.screenPos = [center[0] - (this.width / 2), center[1] + (this.height / 2) * aspect ,
 										center[0] + (this.width / 2), center[1] + (this.height / 2) * aspect ,
 										center[0] - (this.width / 2), center[1] - (this.height / 2) * aspect ,
