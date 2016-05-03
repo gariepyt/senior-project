@@ -35,19 +35,20 @@
 						/*========================= CAPTURE MOUSE EVENTS ========================= */
 						var drag=false;
 						var old_x, old_y;
-
+						var mouseDownEvent;
+						var mouseUpEvent;
 						var mouseDown=function(e) 
 						{
+							mouseDownEvent = true;
 							drag=true;
 							old_x=e.pageX, old_y=e.pageY;
-							console.log(old_x);
-							console.log(old_y);
 							e.preventDefault();
 							return false;
 						};
 
 						var mouseUp=function(e)
 						{
+							mouseUpEvent = true
 							drag=false;
 						};
 
@@ -104,31 +105,45 @@
 						maxUnits = 1000 //temp
 						var toDraw = new DrawGroup(maxUnits); //new Float32Array(maxUnits * 12); //12 points per unit?
 
-						r1 = new Rectangle([0.25, 0.25], 0.25, 0.25);
+						r1 = new Rectangle([0, 0], 0.25, 0.25);
 						r2 = new Rectangle([0, 0], 0.25, 0.25);
 						r3 = new Rectangle([0, 0.25], 0.25, 0.25);
 						r4 = new Rectangle([0.25, 0], 0.25, 0.25);
 
 						toDraw.group.push(r1);
-						toDraw.group.push(r2);
+						//toDraw.group.push(r2);
 
 
 						var groupToDraw = 0;
 						function update()
 						{
-							if (groupToDraw == 0)
+							// if (groupToDraw == 0)
+							// {
+							// 	toDraw.group = []
+							// 	toDraw.group.push(r1);
+							// 	toDraw.group.push(r2);
+							// 	groupToDraw = 1;
+							// }
+							// else
+							// {
+							// 	toDraw.group = []
+							// 	toDraw.group.push(r3);
+							// 	toDraw.group.push(r4);
+							// 	groupToDraw = 0;
+							// }
+
+							if (mouseDownEvent)
 							{
-								toDraw.group = []
-								toDraw.group.push(r1);
-								toDraw.group.push(r2);
-								groupToDraw = 1;
+								mouseDownEvent = false;	
+								var i; 
+								for(i=0; i < toDraw.group.length; i++)
+								{
+									toDraw.group[i].mouseDown(old_x, old_y);
+								}
 							}
-							else
+							else if (mouseUpEvent)
 							{
-								toDraw.group = []
-								toDraw.group.push(r3);
-								toDraw.group.push(r4);
-								groupToDraw = 0;
+								mouseUpEvent = false;
 							}
 						}
 
@@ -145,7 +160,7 @@
 							toDraw.render();
 						}
 
-						setInterval(update, 1000);
+						setInterval(update, 20);
 
 						setInterval(drawLoop, 16);
 					}
@@ -197,13 +212,20 @@
 						/*
 						Class for rectangles
 						*/
-						this.screenPos = [center[0] - (width / 2), (center[1] + (height / 2)) * aspect,
-										center[0] + (width / 2), (center[1] + (height / 2)) * aspect,
-										center[0] - (width / 2), (center[1] - (height / 2)) * aspect,
-										center[0] - (width / 2), (center[1] - (height / 2)) * aspect,
-										center[0] + (width / 2), (center[1] + (height / 2)) * aspect,
-										center[0] + (width / 2), (center[1] - (height / 2)) * aspect];
-						
+						this.width = width;
+						this.height = height;
+						this.setPos(center, width, height);
+						// this.screenPos = [center[0] - (width / 2), (center[1] + (height / 2)) * aspect,
+						// 				center[0] + (width / 2), (center[1] + (height / 2)) * aspect,
+						// 				center[0] - (width / 2), (center[1] - (height / 2)) * aspect,
+						// 				center[0] - (width / 2), (center[1] - (height / 2)) * aspect,
+						// 				center[0] + (width / 2), (center[1] + (height / 2)) * aspect,
+						// 				center[0] + (width / 2), (center[1] - (height / 2)) * aspect];
+
+						// this.top = center[1] + (height / 2) * aspect;
+						// this.bottom = center[1] - (height / 2) * aspect;
+						// this.right = center[0] + (width / 2);
+						// this.left = center[0] - (width / 2);
 					}
 
 					Rectangle.prototype.draw = function(toDraw) //adds its info to the buffer
@@ -222,7 +244,42 @@
 						toDraw.index += this.screenPos.length;
 					}
 
+					Rectangle.prototype.mouseDown = function(posx, posy)
+					{
+						//TODO: replace with changing the color of the piece
+						// console.log(this.top);
+						// console.log(this.bottom);
+						// console.log(this.left);
+						// console.log(this.right);
+						// console.log((posx / canvas.width) - 0.5);
+						// console.log((posy / canvas.height) - 0.5);
+						normalX = (posx / canvas.width) - 0.5;
+						normalY = (posy / canvas.height) - 0.5;
+						if (normalX < this.right && normalX > this.left &&
+							normalY < this.top && normalY > this.bottom)
+						{
+							console.log("Selected");
+						} 
+						else
+						{
+							console.log("Not selected");
+						}
+					}
 
+					Rectangle.prototype.setPos = function(center)
+					{
+						this.screenPos = [center[0] - (this.width / 2), (center[1] + (this.height / 2)) * aspect,
+										center[0] + (this.width / 2), (center[1] + (this.height / 2)) * aspect,
+										center[0] - (this.width / 2), (center[1] - (this.height / 2)) * aspect,
+										center[0] - (this.width / 2), (center[1] - (this.height / 2)) * aspect,
+										center[0] + (this.width / 2), (center[1] + (this.height / 2)) * aspect,
+										center[0] + (this.width / 2), (center[1] - (this.height / 2)) * aspect];
+
+						this.top = center[1] + (this.height / 2) * aspect;
+						this.bottom = center[1] - (this.height / 2) * aspect;
+						this.right = center[0] + (this.width / 2);
+						this.left = center[0] - (this.width / 2);
+					}
 			</script>
 	</head>
 	<body onload="init()">
