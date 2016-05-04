@@ -101,8 +101,8 @@
 						aspect = canvas.width / canvas.height;
 
 						maxUnits = 100 //temp
-						var toDraw = new DrawGroup(maxUnits, [0.0, 0.3, 0.0, 1.0]); 
-						var selected = new DrawGroup(maxUnits, [0.0, 1, 0.0, 1.0]);
+						var toDraw = new DrawGroup(maxUnits, [0.0, 1.0, 0.0, 1.0]); 
+						var selected = new DrawGroup(maxUnits, [0.0, 0.3, 0.0, 1.0]); //FIXME: can't seem to color this group properly and rects in this group don't move
 						var myGroups = [toDraw, selected];
 
 						r1 = new Rectangle([0, 0], 0.125, 0.125);
@@ -111,7 +111,7 @@
 						r4 = new Rectangle([0.25, 0], 0.25, 0.25);
 
 						toDraw.group.push(r1);
-						selected.group.push(r2);
+						toDraw.group.push(r2);
 
 						function update()
 						{
@@ -258,6 +258,7 @@
 							} 
 							else 
 							{
+								console.log("moving");
 								this.moveTo([normalX, normalY]);
 							}
 						}
