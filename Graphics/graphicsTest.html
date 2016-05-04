@@ -131,6 +131,13 @@
 							{
 								mouseUpEvent = false;
 							}
+							for(i=0; i < myGroups.length; i++)
+							{
+								for(j=0; j < myGroups[i].group.length; j++)
+								{
+									myGroups[i].group[j].update();
+								}
+							}
 						}
 
 						function drawLoop()
@@ -212,6 +219,7 @@
 						this.height = height;
 						this.setPos(center, width, height);
 						this.selected = false;
+						this.speed = 0.01; //TODO: tune for different shapes and stuff
 					}
 
 					Rectangle.prototype.draw = function(toDraw) //adds its info to the buffer
@@ -259,14 +267,37 @@
 							else 
 							{
 								console.log("moving");
-								this.moveTo([normalX, normalY]);
+								this.setDestination([normalX, normalY]);
 							}
 						}
 					}
 
-					Rectangle.prototype.moveTo = function(newPos)
+					Rectangle.prototype.update = function()
 					{
-						this.setPos(newPos); //TODO: replace with pathfinding code!
+						/*=================  MOVEMENT =======================*/
+						if (this.moving)
+						{
+							//TODO: add pathfinding code!
+							xvector = this.destination[0] - this.center[0]; 
+							yvector = this.destination[1] - this.center[1];
+							mag = Math.sqrt(xvector * xvector + yvector * yvector);
+							xunit = xvector / mag;
+							yunit = yvector / mag;
+							newPos = [this.center[0] + xunit * this.speed, this.center[1] + yunit * this.speed]
+							this.setPos(newPos); 
+						}
+						if (this.center == this.destination)
+						{
+							this.moving = false;
+						}
+
+
+					}
+
+					Rectangle.prototype.setDestination = function(destination)
+					{
+						this.moving = true;
+						this.destination = destination;
 					}
 
 					Rectangle.prototype.setPos = function(center)
@@ -278,6 +309,7 @@
 										center[0] + (this.width / 2), center[1] + (this.height / 2) * aspect ,
 										center[0] + (this.width / 2), center[1] - (this.height / 2) * aspect ];
 
+						this.center = center;
 						this.top = center[1] + (this.height / 2)  * aspect;
 						this.bottom = center[1] - (this.height / 2) * aspect;
 						this.right = center[0] + (this.width / 2);
