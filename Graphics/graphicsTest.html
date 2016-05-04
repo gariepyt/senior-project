@@ -115,10 +115,12 @@
 
 						function update()
 						{
+							var i; var j;
+
+							/*========================== USER EVENTS ==================================*/
 							if (mouseDownEvent)
 							{
 								mouseDownEvent = false;	
-								var i; var j;
 								for(i=0; i < myGroups.length; i++)
 								{
 									for(j=0; j < myGroups[i].group.length; j++)
@@ -131,6 +133,14 @@
 							{
 								mouseUpEvent = false;
 							}
+
+							/*======================COLLISON CHECKS================================*/
+							for(i=0; i < myGroups.length; i++)
+							{
+								myGroups[i].checkForCollisions();
+							}
+
+							/*========================== UPDATES ==================================*/
 							for(i=0; i < myGroups.length; i++)
 							{
 								for(j=0; j < myGroups[i].group.length; j++)
@@ -151,15 +161,8 @@
 								{
 									myGroups[i].group[j].draw(myGroups[i]);
 								}
-								myGroups[i].render()
+								myGroups[i].render();
 							}
-							// var i;
-							// for(i=0; i < toDraw.group.length; i++)
-							// {
-							// 	toDraw.group[i].draw(toDraw);
-							// }
-
-							// toDraw.render();
 						}
 
 						setInterval(update, 1);
@@ -210,6 +213,41 @@
 						this.index = 0;
 					}
 
+					DrawGroup.prototype.checkForCollisions = function()
+					{
+						var i; var j;
+						for (i=0; i < this.group.length; i++) //pairwise comparison
+						{
+							for(j=0; j < this.group.length; j++)
+							{
+								if(j != i)
+								{
+									var iTopRight = [this.group[i].right, this.group[i].top]; 
+									var iTopLeft = [this.group[i].left, this.group[i].top];
+									var iBottomRight = [this.group[i].right, this.group[i].bottom];
+									var iBottomLeft = [this.group[i].left, this.group[i].bottom];
+									
+									if(this.group[j].in(iTopRight) || this.group[j].in(iTopLeft) ||
+										this.group[j].in(iBottomRight) || this.group[j].in(iBottomLeft))
+									{
+										this.group[i].moving = false;
+										var newPos;
+										var distanceToMove = 0.01; //TODO: Tune me
+										xvector = this.group[i].center[0] - this.group[j].center[0];
+										yvector = this.group[i].center[1] - this.group[j].center[1];
+										mag = Math.sqrt(xvector * xvector + yvector * yvector);
+										xunit = 1 * xvector / mag;
+										yunit = 1 * yvector / mag;
+										newPos = [this.group[i].center[0] + xunit * distanceToMove, this.group[i].center[1] + yunit * distanceToMove]
+										this.group[i].setPos(newPos);
+
+										//TODO: resume moving once obstacle is moved. pathfinding related
+									}
+								}
+							}
+						}
+					}
+
 					function Rectangle(center, width, height)
 					{
 						/*
@@ -245,8 +283,7 @@
 						normalY = -2 * (posy / canvas.height) + 1;
 						if (!this.selected)
 						{
-							if (normalX < this.right && normalX > this.left &&
-								normalY < this.top && normalY > this.bottom)
+							if (this.in([normalX, normalY]))
 							{
 								this.selected = true;
 								console.log("Selected");
@@ -258,8 +295,7 @@
 						}
 						else
 						{
-							if (normalX < this.right && normalX > this.left &&
-								normalY < this.top && normalY > this.bottom)
+							if (this.in([normalX, normalY]))
 							{
 								this.selected = false;
 								console.log("deselected");
@@ -290,8 +326,6 @@
 						{
 							this.moving = false;
 						}
-
-
 					}
 
 					Rectangle.prototype.setDestination = function(destination)
@@ -314,6 +348,19 @@
 						this.bottom = center[1] - (this.height / 2) * aspect;
 						this.right = center[0] + (this.width / 2);
 						this.left = center[0] - (this.width / 2);
+					}
+
+					Rectangle.prototype.in = function(point)
+					{
+						/*Checks if point is in rectangle*/
+						if(point[0] < this.right && point[0] > this.left && point[1] < this.top && point[1] > this.bottom)
+						{
+							return true;
+						}
+						else
+						{
+							return false;
+						}
 					}
 			</script>
 	</head>
