@@ -1,0 +1,370 @@
+ <html>
+	<head>           
+			<script id="vertex" type="x-shader">
+				attribute vec2 aVertexPosition;
+				void main() 
+				{
+					gl_Position = vec4(aVertexPosition, 0.0, 1.0);
+				}
+			</script>  
+
+			<script id="fragment" type="x-shader">
+				    #ifdef GL_ES
+					precision highp float;
+					#endif
+					uniform vec4 uColor;
+					                       
+					void main() 
+					{
+						gl_FragColor = uColor;
+					}
+			</script>        
+			<script type="text/javascript">
+
+					var gl;
+					var aspect;
+					//var vbuffer;
+					var program;
+
+					function init()
+					{
+						canvas = document.getElementById("mycanvas");
+
+						/*========================= CAPTURE MOUSE EVENTS ========================= */
+						var drag=false;
+						var old_x, old_y;
+						var mouseDownEvent;
+						var mouseUpEvent;
+						var mouseDown=function(e) 
+						{
+							mouseDownEvent = true;
+							drag=true;
+							old_x=e.pageX, old_y=e.pageY;
+							e.preventDefault();
+							return false;
+						};
+
+						var mouseUp=function(e)
+						{
+							mouseUpEvent = true
+							drag=false;
+						};
+
+						var mouseMove=function(e) 
+						{
+							if (!drag) return false;
+							var dX=e.pageX-old_x,
+							    dY=e.pageY-old_y;
+							THETA+=dX*2*Math.PI/canvas.width;
+							PHI+=dY*2*Math.PI/canvas.height;
+							old_x=e.pageX, old_y=e.pageY;
+							e.preventDefault();
+						};
+
+						canvas.addEventListener("mousedown", mouseDown, false);
+						canvas.addEventListener("mouseup", mouseUp, false);
+						canvas.addEventListener("mouseout", mouseUp, false);
+						canvas.addEventListener("mousemove", mouseMove, false);
+
+						/*========================= CANVAS AND SHADERS ========================= */
+					    gl = canvas.getContext("experimental-webgl"); //
+						gl.viewport(0, 0, canvas.width, canvas.height);
+						gl.clearColor(0, 0.5, 0, 1); //drawing viewfinder color
+						gl.clear(gl.COLOR_BUFFER_BIT);
+						
+			    		var v = document.getElementById("vertex").firstChild.nodeValue;
+						var f = document.getElementById("fragment").firstChild.nodeValue;
+						 
+						var vs = gl.createShader(gl.VERTEX_SHADER);
+						gl.shaderSource(vs, v);
+						gl.compileShader(vs);
+						
+						var fs = gl.createShader(gl.FRAGMENT_SHADER);
+						gl.shaderSource(fs, f);
+						gl.compileShader(fs);
+						
+						program = gl.createProgram();
+						gl.attachShader(program, vs);
+						gl.attachShader(program, fs);
+						gl.linkProgram(program);
+
+						if (!gl.getShaderParameter(vs, gl.COMPILE_STATUS))
+							console.log(gl.getShaderInfoLog(vs));
+
+						if (!gl.getShaderParameter(fs, gl.COMPILE_STATUS))
+							console.log(gl.getShaderInfoLog(fs));
+
+						if (!gl.getProgramParameter(program, gl.LINK_STATUS))
+							console.log(gl.getProgramInfoLog(program));
+
+						//set up arrays
+						aspect = canvas.width / canvas.height;
+
+						maxUnits = 100 //temp
+						var toDraw = new DrawGroup(maxUnits, [0.0, 1.0, 0.0, 1.0]); 
+						var selected = new DrawGroup(maxUnits, [0.0, 0.3, 0.0, 1.0]); //FIXME: can't seem to color this group properly and rects in this group don't move
+						var myGroups = [toDraw, selected];
+
+						r1 = new Rectangle([0, 0], 0.125, 0.125);
+						r2 = new Rectangle([.5, .5], 0.125, 0.125);
+						r3 = new Rectangle([0, 0.25], 0.25, 0.25);
+						r4 = new Rectangle([0.25, 0], 0.25, 0.25);
+
+						toDraw.group.push(r1);
+						toDraw.group.push(r2);
+
+						function update()
+						{
+							var i; var j;
+
+							/*========================== USER EVENTS ==================================*/
+							if (mouseDownEvent)
+							{
+								mouseDownEvent = false;	
+								for(i=0; i < myGroups.length; i++)
+								{
+									for(j=0; j < myGroups[i].group.length; j++)
+									{
+										myGroups[i].group[j].mouseDown(old_x, old_y);
+									}
+								}
+							}
+							else if (mouseUpEvent)
+							{
+								mouseUpEvent = false;
+							}
+
+							/*======================COLLISON CHECKS================================*/
+							for(i=0; i < myGroups.length; i++)
+							{
+								myGroups[i].checkForCollisions();
+							}
+
+							/*========================== UPDATES ==================================*/
+							for(i=0; i < myGroups.length; i++)
+							{
+								for(j=0; j < myGroups[i].group.length; j++)
+								{
+									myGroups[i].group[j].update();
+								}
+							}
+						}
+
+						function drawLoop()
+						{
+							toDraw.clear();
+							gl.clear(gl.COLOR_BUFFER_BIT);
+							var i; var j;
+							for(i=0; i < myGroups.length; i++)
+							{
+								for(j=0; j < myGroups[i].group.length; j++)
+								{
+									myGroups[i].group[j].draw(myGroups[i]);
+								}
+								myGroups[i].render();
+							}
+						}
+
+						setInterval(update, 1);
+
+						setInterval(drawLoop, 16);
+					}
+
+					function DrawGroup(maxUnits, color)
+					{
+						this.v = new Float32Array(maxUnits*12);
+						var i;
+						for(i=0; i < this.v.length; i++)
+						{
+							this.v[i] = 0;
+						}
+						this.index = 0;
+						this.group = [];
+						this.color = color;
+					}
+
+					DrawGroup.prototype.render = function()
+					{
+						itemSize = 2;
+						numItems = this.v.length / itemSize;
+
+						//gl
+						gl.useProgram(program);
+     
+						program.uColor = gl.getUniformLocation(program, "uColor"); //get color from program
+						gl.uniform4fv(program.uColor, this.color); //set color
+
+						program.aVertexPosition = gl.getAttribLocation(program, "aVertexPosition"); //get vertex position from program
+						gl.enableVertexAttribArray(program.aVertexPosition);
+						gl.vertexAttribPointer(program.aVertexPosition, itemSize, gl.FLOAT, false, 0, 0);
+						gl.drawArrays(gl.TRIANGLES, 0, numItems)
+					}
+
+					DrawGroup.prototype.clear = function()
+					{
+						var i;
+						for (i=0; i < this.v.length; i++)
+						{
+							if(this.v[i] != 0)
+							{
+								this.v[i] = 0;
+							}
+						}
+						this.index = 0;
+					}
+
+					DrawGroup.prototype.checkForCollisions = function()
+					{
+						var i; var j;
+						for (i=0; i < this.group.length; i++) //pairwise comparison
+						{
+							for(j=0; j < this.group.length; j++)
+							{
+								if(j != i)
+								{
+									var iTopRight = [this.group[i].right, this.group[i].top]; 
+									var iTopLeft = [this.group[i].left, this.group[i].top];
+									var iBottomRight = [this.group[i].right, this.group[i].bottom];
+									var iBottomLeft = [this.group[i].left, this.group[i].bottom];
+									
+									if(this.group[j].in(iTopRight) || this.group[j].in(iTopLeft) ||
+										this.group[j].in(iBottomRight) || this.group[j].in(iBottomLeft))
+									{
+										this.group[i].moving = false;
+										var newPos;
+										var distanceToMove = 0.01; //TODO: Tune me
+										xvector = this.group[i].center[0] - this.group[j].center[0];
+										yvector = this.group[i].center[1] - this.group[j].center[1];
+										mag = Math.sqrt(xvector * xvector + yvector * yvector);
+										xunit = 1 * xvector / mag;
+										yunit = 1 * yvector / mag;
+										newPos = [this.group[i].center[0] + xunit * distanceToMove, this.group[i].center[1] + yunit * distanceToMove]
+										this.group[i].setPos(newPos);
+
+										//TODO: resume moving once obstacle is moved. pathfinding related
+									}
+								}
+							}
+						}
+					}
+
+					function Rectangle(center, width, height)
+					{
+						/*
+						Class for rectangles
+						*/
+						this.width = width;
+						this.height = height;
+						this.setPos(center, width, height);
+						this.selected = false;
+						this.speed = 0.01; //TODO: tune for different shapes and stuff
+					}
+
+					Rectangle.prototype.draw = function(toDraw) //adds its info to the buffer
+					{
+						var i;
+						for (i=0; i < this.screenPos.length; i++)
+						{
+							toDraw.v[toDraw.index+i] = this.screenPos[i];
+						}
+						toDraw.index += this.screenPos.length;
+
+						var vbuffer = gl.createBuffer();
+						gl.bindBuffer(gl.ARRAY_BUFFER, vbuffer);                            
+						gl.bufferData(gl.ARRAY_BUFFER, toDraw.v, gl.STATIC_DRAW);
+
+						toDraw.index += this.screenPos.length;
+					}
+
+					Rectangle.prototype.mouseDown = function(posx, posy)
+					{
+						//TODO: replace selection to changing the color of the piece
+						normalX = 2 * (posx / canvas.width) - 1;
+						normalY = -2 * (posy / canvas.height) + 1;
+						if (!this.selected)
+						{
+							if (this.in([normalX, normalY]))
+							{
+								this.selected = true;
+								console.log("Selected");
+							} 
+							else
+							{
+								console.log("Not selected");
+							}
+						}
+						else
+						{
+							if (this.in([normalX, normalY]))
+							{
+								this.selected = false;
+								console.log("deselected");
+							} 
+							else 
+							{
+								console.log("moving");
+								this.setDestination([normalX, normalY]);
+							}
+						}
+					}
+
+					Rectangle.prototype.update = function()
+					{
+						/*=================  MOVEMENT =======================*/
+						if (this.moving)
+						{
+							//TODO: add pathfinding code!
+							xvector = this.destination[0] - this.center[0]; 
+							yvector = this.destination[1] - this.center[1];
+							mag = Math.sqrt(xvector * xvector + yvector * yvector);
+							xunit = xvector / mag;
+							yunit = yvector / mag;
+							newPos = [this.center[0] + xunit * this.speed, this.center[1] + yunit * this.speed]
+							this.setPos(newPos); 
+						}
+						if (this.center == this.destination)
+						{
+							this.moving = false;
+						}
+					}
+
+					Rectangle.prototype.setDestination = function(destination)
+					{
+						this.moving = true;
+						this.destination = destination;
+					}
+
+					Rectangle.prototype.setPos = function(center)
+					{
+						this.screenPos = [center[0] - (this.width / 2), center[1] + (this.height / 2) * aspect ,
+										center[0] + (this.width / 2), center[1] + (this.height / 2) * aspect ,
+										center[0] - (this.width / 2), center[1] - (this.height / 2) * aspect ,
+										center[0] - (this.width / 2), center[1] - (this.height / 2) * aspect ,
+										center[0] + (this.width / 2), center[1] + (this.height / 2) * aspect ,
+										center[0] + (this.width / 2), center[1] - (this.height / 2) * aspect ];
+
+						this.center = center;
+						this.top = center[1] + (this.height / 2)  * aspect;
+						this.bottom = center[1] - (this.height / 2) * aspect;
+						this.right = center[0] + (this.width / 2);
+						this.left = center[0] - (this.width / 2);
+					}
+
+					Rectangle.prototype.in = function(point)
+					{
+						/*Checks if point is in rectangle*/
+						if(point[0] < this.right && point[0] > this.left && point[1] < this.top && point[1] > this.bottom)
+						{
+							return true;
+						}
+						else
+						{
+							return false;
+						}
+					}
+			</script>
+	</head>
+	<body onload="init()">
+			<canvas id="mycanvas" width="800" height="500"></canvas>
+	</body>
+</html>
