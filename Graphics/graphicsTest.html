@@ -230,7 +230,16 @@
 									if(this.group[j].in(iTopRight) || this.group[j].in(iTopLeft) ||
 										this.group[j].in(iBottomRight) || this.group[j].in(iBottomLeft))
 									{
+										
+
+										/* Destination gets changed */
+										
+										// console.log("Is it missing?: " + this.group[i].destination);
+
+										// console.log("The goal: " + goalDestination);
+
 										this.group[i].moving = false;
+
 										var newPos;
 										var distanceToMove = 0.01; //TODO: Tune me
 										xvector = this.group[i].center[0] - this.group[j].center[0];
@@ -241,11 +250,36 @@
 										newPos = [this.group[i].center[0] + xunit * distanceToMove, this.group[i].center[1] + yunit * distanceToMove]
 										this.group[i].setPos(newPos);
 
+										var goalDestination = this.group[i].destination.slice(0);
+
+										if (this.group[j].in(iTopRight) || this.group[j].in(iTopLeft) ) {
+											// this.group[i].destination = [goalDestination[0], newPos[1]];
+											this.group[i].setGoalDestination(goalDestination[0], newPos[1]);
+										}
+										else {
+											// this.group[i].destination = [newPos[0], goalDestination[1]];
+											this.group[i].setGoalDestination(newPos[0], goalDestination[1]);
+											// console.log(this.group[i].destination);
+										}
+
+										// this.group[i].moving = true;
+
 										//TODO: resume moving once obstacle is moved. pathfinding related
 									}
 								}
 							}
 						}
+					}
+
+					Array.prototype.compare = function(testArr) {
+    					if (this.length != testArr.length) return false;
+    					for (var i = 0; i < testArr.length; i++) {
+        					if (this[i].compare) { 
+            					if (!this[i].compare(testArr[i])) return false;
+        					}
+        					if (this[i] !== testArr[i]) return false;
+    					}
+    					return true;
 					}
 
 					function Rectangle(center, width, height)
@@ -319,12 +353,26 @@
 							mag = Math.sqrt(xvector * xvector + yvector * yvector);
 							xunit = xvector / mag;
 							yunit = yvector / mag;
-							newPos = [this.center[0] + xunit * this.speed, this.center[1] + yunit * this.speed]
+
+							//NOTE: Rectangle would never reach their destination
+							if (Math.abs(xvector) < Math.abs(xunit * this.speed) && Math.abs(yvector) < Math.abs(this.center[1] + yunit * this.speed)) {
+								newPos = this.destination;
+							}
+							else {
+								newPos = [this.center[0] + xunit * this.speed, this.center[1] + yunit * this.speed];
+							}
+							
 							this.setPos(newPos); 
-						}
-						if (this.center == this.destination)
-						{
-							this.moving = false;
+
+							if (this.center.compare(this.destination))
+							{
+								if (this.goalDestination && !this.goalDestination.compare(this.destination)) {
+									this.destination = this.goalDestination.slice(0);
+								}
+								else {
+									this.moving = false;
+								}
+							}
 						}
 					}
 
@@ -332,6 +380,8 @@
 					{
 						this.moving = true;
 						this.destination = destination;
+						this.goalDestination = destination;
+						console.log("Planned destination: " + this.destination);
 					}
 
 					Rectangle.prototype.setPos = function(center)
@@ -361,6 +411,17 @@
 						{
 							return false;
 						}
+					}
+
+					Rectangle.prototype.setGoalDestination = function(newX, newY)
+					{
+						if (this.goalDestination.compare(this.destination)) {
+							this.goalDestination = this.destination.slice(0);		
+						}
+						this.destination = [newX, newY];	
+						this.moving = true;
+						console.log("New plan: " + this.destination);
+
 					}
 			</script>
 	</head>
