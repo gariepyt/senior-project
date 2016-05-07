@@ -62,6 +62,6 @@ Can move selected squares by clicking on a spot on the board.
 
 Current issues:
 Pathfinding works better after following these steps:
-  1) selecting and unselecting a square
-  2) selecting the other square
-  3) moving that other square
+  1. Selecting and unselecting a square
+  2. Selecting the other square
+  3. Moving that other square
