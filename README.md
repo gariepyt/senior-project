@@ -61,6 +61,9 @@ Can select and unselect the two squares by clicking on them.
 Can move selected squares by clicking on a spot on the board.
 
 Current issues:
+1. No indication of selection when you left click on a rectangle
+2. When the rightmost square is selected, it can "push" the left square around the screen 
+
 Pathfinding works better after following these steps:
   1. Selecting and unselecting a square
   2. Selecting the other square
