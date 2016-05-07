@@ -1,7 +1,7 @@
 # senior-project
 Team: Trevor Apple, Tom Gariepy, Joseph Sibaila
 
-# Instructions:
+# Instructions
 
 Data File Framework
 ----------------------------------------------------------------------------------
