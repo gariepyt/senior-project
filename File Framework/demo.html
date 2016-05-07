@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <script src="request.js"></script>
+    <title>Files Demo</title>
+  </head>
+  <body>
+  	<h1>Files Demo</h1>
+  	<h2>Create/Update Game Data Files (POST)</h2>
+  	<p>
+  		Verify Directory and Files here:<br>
+  		 <a href="http://web.engr.oregonstate.edu/~sibailaj/framework/data/">http://web.engr.oregonstate.edu/~sibailaj/framework/data/</a>
+  	</p>
+  	<p>
+  	  Game ID (integer):
+  	  <input type="text" id="id">
+  	</p>
+    <p>
+  	  Player (user, opponent):
+	  <input type="text" id="player">
+  	</p>
+  	<p>
+  	  Type (rock, paper, scissors):
+  	  <input type="text" id="type">
+  	</p>
+  	<p>
+  		Index (integer > 0):
+  		<input type="text" id="index">
+  	</p>
+  	<p>
+  		Health (integer):
+  		<input type="text" id="health">
+  	</p>
+  	<p>
+  		X Coordinate on Map (integer):
+  		<input type="text" id="x_coord">
+  	</p>
+  	<p>
+  		Y Coordinate on Map (integer):
+  		<input type="text" id="y_coord">  		
+  	</p>
+  	<button onclick="clickPost();">Post File</button>
+  	<h2>GET Files by Game ID</h2>
+  	<p>
+  	  Game ID (integer):<br>
+      **May Have to Clear Cache to get Current Data**<br>
+  	  <input type="text" id="id2">
+  	</p>
+  	<button onclick="clickGet();">Get Files</button>
+    <div id="here"></div> 
+  </body>
+</html>
