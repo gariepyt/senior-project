@@ -107,39 +107,46 @@
 						var selected = new DrawGroup(maxUnits, [0.0, 0.3, 0.0, 1.0]); //FIXME: can't seem to color this group properly and rects in this group don't move
 						var myGroups = [toDraw, selected];
 
-						r1 = new Rectangle([0, 0], 0.125, 0.125);
-						r2 = new Rectangle([.5, .5], 0.125, 0.125);
-						r3 = new Rectangle([0, 0.25], 0.25, 0.25);
-						r4 = new Rectangle([0.25, 0], 0.25, 0.25);
+						// r1 = new Rectangle([0, 0], 0.125, 0.125);
+						// r2 = new Rectangle([.5, .5], 0.125, 0.125);
+						// r3 = new Rectangle([0, 0.25], 0.25, 0.25);
+						// r4 = new Rectangle([0.25, 0], 0.25, 0.25);
 
-						t1 = new Triangle([0, 0], 0.125, 0.125);
-						t2 = new Triangle([.5, .5], 0.125, 0.125);
+						// t1 = new Triangle([0, 0], 0.125, 0.125);
+						// t2 = new Triangle([.5, .5], 0.125, 0.125);
 
-						c1 = new Circle([0, 0], 0.125);
-						c2 = new Circle([0.5, 0.5], 0.125);
+						// c1 = new Circle([0, 0], 0.125);
+						// c2 = new Circle([0.5, 0.5], 0.125);
 
-						toDraw.group.push(c1);
-						toDraw.group.push(c2);
+						// toDraw.group.push(c1);
+						// toDraw.group.push(c2);
+
+						//Unit(center, shape, owner)
+						u1 = new Unit([0, 0], "rectangle", true);
+						u2 = new Unit([0.5, 0.5], "triangle", false);
+
+						toDraw.group.push(u1);
+						toDraw.group.push(u2);
 
 						function update()
 						{
 							var i; var j; 
-							var combinedGroup = new DrawGroup(maxUnits, [0.0, 1.0, 0.0, 1.0])
-							for(i=0; i < myGroups.length; i++)
-							{
-								for(j=0; j < myGroups.length; j++)
-								{
-									combinedGroup.group.push(myGroups[i].group[j]);
-								}
-							}
+							// var combinedGroup = new DrawGroup(maxUnits, [0.0, 1.0, 0.0, 1.0])
+							// for(i=0; i < myGroups.length; i++)
+							// {
+							// 	for(j=0; j < myGroups.length; j++)
+							// 	{
+							// 		combinedGroup.group.push(myGroups[i].group[j]);
+							// 	}
+							// }
 
 							/*========================== USER EVENTS ==================================*/
 							if (mouseDownEvent)
 							{
 								mouseDownEvent = false;	
-								for(i=0; i < combinedGroup.length; i++)
+								for(i=0; i < toDraw.group.length; i++)
 								{
-									combinedGroup[i].mouseDown(old_x, old_y);
+									toDraw.group[i].mouseDown(old_x, old_y);
 								}
 							}
 							else if (mouseUpEvent)
@@ -148,30 +155,30 @@
 							}
 
 							/*====================== COLLISON CHECKS ================================*/
-							combinedGroup.checkForCollisions(); 
+							toDraw.checkForCollisions(); 
 
 							/*============================ CHECK ATTACKS ==========================*/
-							for(i=0; i < combinedGroup.length; i++)
-							{
-								for(j=0; j < combinedGroup.length; j++)
-								{
-									if (combinedGroup[i].inRange(combinedGroup[j]))
-									{
-										//TODO: start attacking animation
-										combinedGroup[i].dealDamage(combinedGroup[j])
-									}
-									else
-									{
-										//TODO: end attacking animation
-									}
-								}
-							}
+							// for(i=0; i < toDraw.group.length; i++)
+							// {
+							// 	for(j=0; j < toDraw.group.length; j++)
+							// 	{
+							// 		if (toDraw.group[i].inRange(toDraw[j]))
+							// 		{
+							// 			//TODO: start attacking animation
+							// 			toDraw.group[i].dealDamage(toDraw[j])
+							// 		}
+							// 		else
+							// 		{
+							// 			//TODO: end attacking animation
+							// 		}
+							// 	}
+							// }
 
 
 							/*========================== UPDATES ==================================*/
-							for(i=0; i < combinedGroup.length; i++)
+							for(i=0; i < toDraw.group.length; i++)
 							{
-								combinedGroup[i].update()
+								toDraw.group[i].update()
 							}
 						}
 
@@ -275,26 +282,33 @@
 					
 					/*========================================================  UNIT CLASS =======================================================*/
 
-					function Unit(center, health, range, speed, attack, shape, owner)
+					function Unit(center, shape, owner)
 					{
-						this.center = center;
-						this.health = health; 
-						this.range = range;
-						this.speed = speed;
-						this.attack = attack;
 						this.owner = owner;
 						this.shape = shape;
 						if(this.shape == "rectangle")
 						{
-							this.gObject = new Rectangle(this.center, 0.125, 0.125);
+							this.health = 30; 
+							this.range = 0.1;
+							this.speed = 0.05;
+							this.attack = 1;
+							this.gObject = new Rectangle(center, 0.125, 0.125);
 						}
 						else if(this.shape == "triangle")
 						{
-							this.gObject = new Triangle(this.center, 0.125, 0.125);
+							this.health = 20; 
+							this.range = 0.1;
+							this.speed = 0.05;
+							this.attack = 1;
+							this.gObject = new Triangle(center, 0.125, 0.125);
 						}
 						else if(this.shape == "circle")
 						{
-							this.gObject = new Circle(this.center, 0.125);
+							this.health = 10; 
+							this.range = 0.1;
+							this.speed = 0.05;
+							this.attack = 1;
+							this.gObject = new Circle(center, 0.125);
 						}
 
 						this.center = this.gObject.center;
@@ -302,6 +316,11 @@
 						this.left = this.gObject.left;
 						this.top = this.gObject.top;
 						this.bottom = this.gObject.bottom;
+					}
+
+					Unit.prototype.mouseDown = function(x, y)
+					{
+						this.gObject.mouseDown(x, y);
 					}
 
 					Unit.prototype.update = function()
@@ -316,11 +335,13 @@
 
 					Unit.prototype.takeDamage = function(damage)
 					{
+						console.log(this.shape + " Taking damage");
 						this.health -= damage;
 					}
 
 					Unit.prototype.dealDamage = function(opponent)
 					{
+						console.log(this.shape + " Attacking");
 						opponent.takeDamage(this.attack);
 					}
 
