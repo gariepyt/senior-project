@@ -646,6 +646,74 @@
 							return false;
 						}
 					}
+
+					/*========================================================  FILE RETRIEVAL AND UPLOAD REQUESTS =======================================================*/
+
+					/**
+					 * setFile(unit)
+					 * Function that sends unit object data to server to be
+					 * processed as an individual file in the game id directory.
+					 * 
+					 * Parameter: unit (Object)
+					 * Return Value: true (If successful)
+					*/
+					function setFile(unit) { //SINGLE FILE UPLOAD REQUEST 
+						var httpRequest = new XMLHttpRequest();
+						var url = "http://web.engr.oregonstate.edu/~sibailaj/framework/handler.php";
+						var payload = JSON.stringify(unit);
+
+						console.log(payload);
+
+						if (httpRequest) {
+							httpRequest.onreadystatechange = handle;
+							httpRequest.open('POST', url, true);
+							httpRequest.setRequestHeader("Content-type", "application/json");
+							httpRequest.send(payload);
+						}
+
+						function handle() {
+							if (httpRequest.readyState === 4 && httpRequest.status === 200) {
+								
+								return true;									
+							} else {
+								//alert("Error: Bad Request");
+							}
+						}
+					}
+
+					/**
+					 * getFiles(id)
+					 * Function that retrieves all unit object data from server
+					 * from the specified game id directory.
+					 * 
+					 * Parameter: id (Integer)
+					 * Return Value: unitArray (Array of unit objects)
+					*/
+					function getFiles(id) { //GAME DATA RETRIEVAL REQUEST
+						var httpRequest = new XMLHttpRequest();
+						var url = "http://web.engr.oregonstate.edu/~sibailaj/framework/handler.php?id=" + id;
+						var unitArray;
+
+						if (httpRequest) {
+							httpRequest.onreadystatechange = handle;
+							httpRequest.open('GET', url, true);
+							httpRequest.send();
+						}
+
+						function handle() {
+							if (httpRequest.readyState === 4 && httpRequest.status === 200) {
+								//Display Response
+								document.getElementById("here").innerHTML = httpRequest.responseText;
+
+								//Parse JSON Data
+								unitArray = JSON.parse(httpRequest.responseText);						
+							}
+							else {
+								//alert("Error: Bad Request");
+							}
+						}
+						return unitArray;
+					}
 			</script>
 	</head>
 	<body onload="init()">
