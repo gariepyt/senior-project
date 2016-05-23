@@ -125,12 +125,16 @@
 						p1 = new Player(true);
 						p2 = new Player(false);
 
-						u1 = new Unit([0, 0], "rectangle", p1);
-						u2 = new Unit([0.5, 0.5], "triangle", p2);
+						// u1 = new Unit([0, 0], "rectangle", p1);
+						// u2 = new Unit([0.5, 0.5], "triangle", p2);
 
-						// r1 = new Resource();
-						// r2 = new Resource();
+						r1 = new Resource([0, 0], "rectangle");
+						r2 = new Resource([-0.5, 0], "triangle");
+						r3 = new Resource([0.5, 0], "circle");
 
+						toDraw.add(r1);
+						toDraw.add(r2);
+						toDraw.add(r3);
 						p1.spawnRock(toDraw);
 						p2.spawnRock(toDraw);
 
@@ -168,9 +172,9 @@
 							{
 								for(j=0; j < toDraw.group.length; j++)
 								{
-									if(i != j)
+									if(i != j && toDraw.group[i].constructor.name == "Unit")
 									{	
-										if (toDraw.group[i].inRange(toDraw.group[j]) && toDraw.group[i].owner != toDraw.group[j].owner)
+										if (toDraw.group[i].inRange(toDraw.group[j]) && toDraw.group[i].owner != toDraw.group[j].owner && toDraw.group[j].constructor.name == "Unit")
 										{
 											//TODO: start attacking animation
 											toDraw.group[i].dealDamage(toDraw.group[j]);
@@ -308,6 +312,7 @@
 
 					Player.prototype.spawnRock = function(drawGroup)
 					{
+						//TODO: spawn in different location if colliding
 						cost = 50; //TODO: tune me
 						if (this.rock > cost)
 						{
@@ -326,6 +331,7 @@
 
 					Player.prototype.spawnPaper = function(drawGroup)
 					{
+						//TODO: spawn in different location if colliding
 						cost = 50; // TODO: tune me
 						if (this.paper > cost)
 						{
@@ -344,6 +350,7 @@
 
 					Player.prototype.spawnScissors = function(drawGroup)
 					{
+						//TODO: spawn in different location if colliding
 						cost = 50; // TODO: tune me
 						if (this.scissors > cost)
 						{
@@ -552,7 +559,7 @@
 							{
 								this.player.scissors += this.acquireRate;
 							}
-							else if(this.shape == "cirlce")
+							else if(this.shape == "circle")
 							{
 								this.player.paper += this.acquireRate;
 							}
@@ -564,6 +571,24 @@
 						if (collideWith.constructor.name == "Unit")
 						{
 							this.claim(collideWith.owner);
+						}
+					}
+
+					Resource.prototype.draw = function(toDraw)
+					{
+						this.gObject.draw(toDraw);
+					}
+
+					Resource.prototype.in = function(point)
+					{
+						/*Checks if point is in Unit*/
+						if(point[0] < this.gObject.right && point[0] > this.gObject.left && point[1] < this.gObject.top && point[1] > this.gObject.bottom)
+						{
+							return true;
+						}
+						else
+						{
+							return false;
 						}
 					}
 
@@ -925,13 +950,13 @@
 						var theta = 0;
 						for(i = 0; i < 20; i++)
 						{
-							console.log(theta);
+							// console.log(theta);
 							newScreenPos.push(center[0]); newScreenPos.push(center[1]);
 							newScreenPos.push(center[0] + this.radius * Math.cos(theta)); newScreenPos.push(center[1] + (this.radius * Math.sin(theta)) * aspect);
 							theta += wedgesize;
 							newScreenPos.push(center[0] + this.radius * Math.cos(theta)); newScreenPos.push(center[1] + (this.radius * Math.sin(theta)) * aspect);
 						}
-						console.log(newScreenPos);
+						// console.log(newScreenPos);
 						this.screenPos = newScreenPos;
 
 						this.center = center;
