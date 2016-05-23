@@ -128,11 +128,11 @@
 						u1 = new Unit([0, 0], "rectangle", p1);
 						u2 = new Unit([0.5, 0.5], "triangle", p2);
 
-						r1 = new Resource();
-						r2 = new Resource();
+						// r1 = new Resource();
+						// r2 = new Resource();
 
-						toDraw.add(u1);
-						toDraw.add(u2);
+						p1.spawnRock(toDraw);
+						p2.spawnRock(toDraw);
 
 						function update()
 						{
@@ -285,16 +285,6 @@
 										this.group[j].in(iBottomRight) || this.group[j].in(iBottomLeft))
 									{
 										this.group[i].collisionTrigger(this.group[j]);
-										// this.group[i].moving = false;
-										// var newPos;
-										// var distanceToMove = 0.01; //TODO: Tune me
-										// xvector = this.group[i].center[0] - this.group[j].center[0];
-										// yvector = this.group[i].center[1] - this.group[j].center[1];
-										// mag = Math.sqrt(xvector * xvector + yvector * yvector);
-										// xunit = 1 * xvector / mag;
-										// yunit = 1 * yvector / mag;
-										// newPos = [this.group[i].center[0] + xunit * distanceToMove, this.group[i].center[1] + yunit * distanceToMove]
-										// this.group[i].setPos(newPos);
 
 										//TODO: resume moving once obstacle is moved. pathfinding related
 									}
@@ -311,9 +301,9 @@
 						this.human = human;
 
 						//RESOURCES
-						this.rock = 0;
-						this.paper = 0;
-						this.scissors = 0;
+						this.rock = 100;
+						this.paper = 100;
+						this.scissors = 100;
 					}
 
 					Player.prototype.spawnRock = function(drawGroup)
@@ -323,27 +313,50 @@
 						{
 							this.rock -= cost;
 							//TODO: spawn position based on whether or not is human
-							drawGroup.add(new Unit([0,0], "rectangle", this.human));
+							if (this.human)
+							{
+								drawGroup.add(new Unit([0,-0.75], "rectangle", this.human));
+							}
+							else
+							{
+								drawGroup.add(new Unit([0,0.75], "rectangle", this.human));
+							}
 						}
 					}
 
-					Player.prototype.spawnPaper = function()
+					Player.prototype.spawnPaper = function(drawGroup)
 					{
 						cost = 50; // TODO: tune me
 						if (this.paper > cost)
 						{
 							this.paper -= cost;
 							drawGroup.add(new Unit([0,0], "circle", this.human))
+							if (this.human)
+							{
+								drawGroup.add(new Unit([0,-0.75], "circle", this.human));
+							}
+							else
+							{
+								drawGroup.add(new Unit([0,0.75], "circle", this.human));
+							}
 						}
 					}
 
-					Player.prototype.spawnScissors = function()
+					Player.prototype.spawnScissors = function(drawGroup)
 					{
 						cost = 50; // TODO: tune me
 						if (this.scissors > cost)
 						{
 							this.scissors -= cost;
 							drawGroup.add(new Unit([0,0], "triangle", this.human))
+							if (this.human)
+							{
+								drawGroup.add(new Unit([0,-0.75], "triangle", this.human));
+							}
+							else
+							{
+								drawGroup.add(new Unit([0,0.75], "triangle", this.human));
+							}
 						}
 					}
 
@@ -501,28 +514,16 @@
 
 						if(this.shape == "rectangle")
 						{
-							this.health = 30; 
-							this.range = 1; //TODO: tune me
-							this.speed = 0.05;
-							this.attack = 1; // TODO: tune me
 							//TODO: add color
 							this.gObject = new Rectangle(center, 0.125, 0.125);
 						}
 						else if(this.shape == "triangle")
 						{
-							this.health = 20; 
-							this.range = 1; //TODO: tune me
-							this.speed = 0.05;
-							this.attack = 1; // TODO: tune me
 							//TODO: add color
 							this.gObject = new Triangle(center, 0.125, 0.125);
 						}
 						else if(this.shape == "circle")
 						{
-							this.health = 10; 
-							this.range = 1; //TODO: tune me
-							this.speed = 0.05;
-							this.attack = 1; //TODO: tune me
 							//TODO: add color
 							this.gObject = new Circle(center, 0.125);
 						}
