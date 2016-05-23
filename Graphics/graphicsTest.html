@@ -122,8 +122,14 @@
 						// toDraw.group.push(c2);
 
 						//Unit(center, shape, owner)
-						u1 = new Unit([0, 0], "rectangle", true);
-						u2 = new Unit([0.5, 0.5], "triangle", false);
+						p1 = new Player(true);
+						p2 = new Player(false);
+
+						u1 = new Unit([0, 0], "rectangle", p1);
+						u2 = new Unit([0.5, 0.5], "triangle", p2);
+
+						r1 = new Resource();
+						r2 = new Resource();
 
 						toDraw.add(u1);
 						toDraw.add(u2);
@@ -278,16 +284,17 @@
 									if(this.group[j].in(iTopRight) || this.group[j].in(iTopLeft) ||
 										this.group[j].in(iBottomRight) || this.group[j].in(iBottomLeft))
 									{
-										this.group[i].moving = false;
-										var newPos;
-										var distanceToMove = 0.01; //TODO: Tune me
-										xvector = this.group[i].center[0] - this.group[j].center[0];
-										yvector = this.group[i].center[1] - this.group[j].center[1];
-										mag = Math.sqrt(xvector * xvector + yvector * yvector);
-										xunit = 1 * xvector / mag;
-										yunit = 1 * yvector / mag;
-										newPos = [this.group[i].center[0] + xunit * distanceToMove, this.group[i].center[1] + yunit * distanceToMove]
-										this.group[i].setPos(newPos);
+										this.group[i].collisionTrigger(this.group[j]);
+										// this.group[i].moving = false;
+										// var newPos;
+										// var distanceToMove = 0.01; //TODO: Tune me
+										// xvector = this.group[i].center[0] - this.group[j].center[0];
+										// yvector = this.group[i].center[1] - this.group[j].center[1];
+										// mag = Math.sqrt(xvector * xvector + yvector * yvector);
+										// xunit = 1 * xvector / mag;
+										// yunit = 1 * yvector / mag;
+										// newPos = [this.group[i].center[0] + xunit * distanceToMove, this.group[i].center[1] + yunit * distanceToMove]
+										// this.group[i].setPos(newPos);
 
 										//TODO: resume moving once obstacle is moved. pathfinding related
 									}
@@ -348,7 +355,7 @@
 						this.shape = shape;
 						if(this.shape == "rectangle")
 						{
-							this.health = 30; 
+							this.health = 1500; 
 							this.range = 1; //TODO: tune me
 							this.speed = 0.05;
 							this.attack = 1; // TODO: tune me
@@ -356,7 +363,7 @@
 						}
 						else if(this.shape == "triangle")
 						{
-							this.health = 20; 
+							this.health = 1000; 
 							this.range = 1; //TODO: tune me
 							this.speed = 0.05;
 							this.attack = 1; // TODO: tune me
@@ -364,7 +371,7 @@
 						}
 						else if(this.shape == "circle")
 						{
-							this.health = 10; 
+							this.health = 500; 
 							this.range = 1; //TODO: tune me
 							this.speed = 0.05;
 							this.attack = 1; //TODO: tune me
@@ -467,6 +474,23 @@
 						this.dGroup.remove(this);
 					}
 
+					Unit.prototype.collisionTrigger = function(collideWith)
+					{
+						if (collideWith.constructor.name == "Unit")
+						{	
+							this.moving = false;
+							var newPos;
+							var distanceToMove = 0.01; //TODO: Tune me
+							var xvector = this.center[0] - collideWith.center[0];
+							var yvector = this.center[1] - collideWith.center[1];
+							mag = Math.sqrt(xvector * xvector + yvector * yvector);
+							xunit = 1 * xvector / mag;
+							yunit = 1 * yvector / mag;
+							newPos = [this.center[0] + xunit * distanceToMove, this.center[1] + yunit * distanceToMove]
+							this.setPos(newPos);
+						}
+					}
+
 					/*======================================================== RESOURCE CLASS======================================================= */
 
 					function Resource(center, shape)
@@ -531,6 +555,14 @@
 							{
 								this.player.paper += this.acquireRate;
 							}
+						}
+					}
+
+					Resource.prototype.collisionTrigger = function(collideWith)
+					{
+						if (collideWith.constructor.name == "Unit")
+						{
+							this.claim(collideWith.owner);
 						}
 					}
 
