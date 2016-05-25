@@ -320,11 +320,11 @@
 							//TODO: spawn position based on whether or not is human
 							if (this.human)
 							{
-								drawGroup.add(new Unit([0,-0.75], "rectangle", this.human));
+								drawGroup.add(new Unit([0,-0.75], "rectangle", this));
 							}
 							else
 							{
-								drawGroup.add(new Unit([0,0.75], "rectangle", this.human));
+								drawGroup.add(new Unit([0,0.75], "rectangle", this));
 							}
 						}
 					}
@@ -336,14 +336,13 @@
 						if (this.paper > cost)
 						{
 							this.paper -= cost;
-							drawGroup.add(new Unit([0,0], "circle", this.human))
 							if (this.human)
 							{
-								drawGroup.add(new Unit([0,-0.75], "circle", this.human));
+								drawGroup.add(new Unit([0,-0.75], "circle", this));
 							}
 							else
 							{
-								drawGroup.add(new Unit([0,0.75], "circle", this.human));
+								drawGroup.add(new Unit([0,0.75], "circle", this));
 							}
 						}
 					}
@@ -355,14 +354,13 @@
 						if (this.scissors > cost)
 						{
 							this.scissors -= cost;
-							drawGroup.add(new Unit([0,0], "triangle", this.human))
 							if (this.human)
 							{
-								drawGroup.add(new Unit([0,-0.75], "triangle", this.human));
+								drawGroup.add(new Unit([0,-0.75], "triangle", this));
 							}
 							else
 							{
-								drawGroup.add(new Unit([0,0.75], "triangle", this.human));
+								drawGroup.add(new Unit([0,0.75], "triangle", this));
 							}
 						}
 					}
@@ -522,17 +520,17 @@
 						if(this.shape == "rectangle")
 						{
 							//TODO: add color
-							this.gObject = new Rectangle(center, 0.125, 0.125);
+							this.gObject = new Rectangle(center, 0.06125, 0.06125);
 						}
 						else if(this.shape == "triangle")
 						{
 							//TODO: add color
-							this.gObject = new Triangle(center, 0.125, 0.125);
+							this.gObject = new Triangle(center, 0.06125, 0.06125);
 						}
 						else if(this.shape == "circle")
 						{
 							//TODO: add color
-							this.gObject = new Circle(center, 0.125);
+							this.gObject = new Circle(center, 0.06125);
 						}
 
 						this.center = this.gObject.center;
@@ -544,6 +542,7 @@
 
 					Resource.prototype.claim = function(player)
 					{
+						console.log("player" + player);
 						this.player = player;
 					}
 
@@ -553,14 +552,17 @@
 						{
 							if( this.shape == "rectangle")
 							{
+								console.log("rock " + this.player.rock);
 								this.player.rock += this.acquireRate;
 							}
 							else if(this.shape == "triangle")
 							{
+								console.log("scissors " + this.player.scissors);
 								this.player.scissors += this.acquireRate;
 							}
 							else if(this.shape == "circle")
 							{
+								console.log("paper " + this.player.paper)
 								this.player.paper += this.acquireRate;
 							}
 						}
@@ -570,6 +572,7 @@
 					{
 						if (collideWith.constructor.name == "Unit")
 						{
+							console.log("collide with resource!");
 							this.claim(collideWith.owner);
 						}
 					}
@@ -590,6 +593,11 @@
 						{
 							return false;
 						}
+					}
+
+					Resource.prototype.mouseDown = function(x, y)
+					{
+						this.gObject.mouseDown(x, y);
 					}
 
 					/*======================================================== BASE CLASS ======================================================= */
@@ -990,6 +998,6 @@
 			</script>
 	</head>
 	<body onload="init()">
-			<canvas id="mycanvas" width="800" height="500"></canvas>
+			<canvas id="mycanvas" width="1600" height="1000"></canvas>
 	</body>
 </html>
