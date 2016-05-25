@@ -35,6 +35,7 @@
 						var old_x, old_y;
 						var mouseDownEvent;
 						var mouseUpEvent;
+						var keyboardEvent = null;
 						var mouseDown=function(e) 
 						{
 							mouseUpEvent = false;
@@ -63,10 +64,16 @@
 							e.preventDefault();
 						};
 
+						var keyboardEvents=function(e)
+						{
+							keyboardEvent = e;
+						}
+
 						canvas.addEventListener("mousedown", mouseDown, false);
 						canvas.addEventListener("mouseup", mouseUp, false);
 						canvas.addEventListener("mouseout", mouseUp, false);
 						canvas.addEventListener("mousemove", mouseMove, false);
+						document.addEventListener("keydown", keyboardEvents, false);
 
 						/*========================= CANVAS AND SHADERS ========================= */
 					    gl = canvas.getContext("experimental-webgl"); //
@@ -162,6 +169,13 @@
 							else if (mouseUpEvent)
 							{
 								mouseUpEvent = false;
+							}
+
+							if (keyboardEvent != null)
+							{
+								console.log('kb event');
+								p1.handleEvents(keyboardEvent, toDraw);
+								keyboardEvent = null;
 							}
 
 							/*====================== COLLISON CHECKS ================================*/
@@ -296,6 +310,7 @@
 							}
 						}
 					}
+
 					/*========================================================  PLAYER CLASS =======================================================*/
 
 					function Player(human)
@@ -362,6 +377,25 @@
 							{
 								drawGroup.add(new Unit([0,0.75], "triangle", this));
 							}
+						}
+					}
+
+					Player.prototype.handleEvents = function(e, drawGroup)
+					{
+						if (e.keyCode == 81)
+						{
+							console.log('q pressed');
+							this.spawnRock(drawGroup);
+						}
+						else if (e.keyCode == 87)
+						{
+							console.log('w pressed');
+							this.spawnPaper(drawGroup);
+						}
+						else if (e.keyCode == 69)
+						{
+							console.log('e pressed');
+							this.spawnScissors(drawGroup);
 						}
 					}
 
