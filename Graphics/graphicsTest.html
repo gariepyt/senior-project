@@ -364,15 +364,14 @@
 								}
 								else
 								{
-									var toAdd = new Unit([0,-0.75], "rectangle", this);
-									if (!colliders.somethingCollidesWith(toAdd))
+									var pos = [0,-0.75];
+									var toAdd = new Unit(pos, "rectangle", this);
+									while (colliders.somethingCollidesWith(toAdd))
 									{
-										drawGroup.add(toAdd);
+										pos[0] += 0.25;
+										toAdd = new Unit(pos, "circle", this);
 									}
-									else
-									{
-										console.log('Cannot spawn until it doesn\'t collide');
-									}
+									drawGroup.add(toAdd);
 								}
 							}
 							else
@@ -383,15 +382,14 @@
 								}
 								else
 								{
-									var toAdd = new Unit([0,0.75], "rectangle", this);
-									if (!colliders.somethingCollidesWith(toAdd))
+									var pos = [0,0.75];
+									var toAdd = new Unit(pos, "rectangle", this);
+									while (colliders.somethingCollidesWith(toAdd))
 									{
-										drawGroup.add(toAdd);
+										pos[0] += 0.25;
+										toAdd = new Unit(pos, "circle", this);
 									}
-									else
-									{
-										console.log('Cannot spawn until it doesn\'t collide');
-									}
+									drawGroup.add(toAdd);
 								}
 							}
 						}
@@ -412,15 +410,14 @@
 								}
 								else
 								{
-									var toAdd = new Unit([0,-0.75], "circle", this);
-									if (!colliders.somethingCollidesWith(toAdd))
+									var pos = [0,-0.75];
+									var toAdd = new Unit(pos, "circle", this);
+									while (colliders.somethingCollidesWith(toAdd))
 									{
-										drawGroup.add(toAdd);
+										pos[0] += 0.25;
+										toAdd = new Unit(pos, "circle", this);
 									}
-									else
-									{
-										console.log('Cannot spawn until it doesn\'t collide');
-									}
+									drawGroup.add(toAdd);
 								}
 							}
 							else
@@ -431,15 +428,15 @@
 								}
 								else
 								{
-									var toAdd = new Unit([0,0.75], "circle", this);
-									while (!colliders.somethingCollidesWith(toAdd))
+									var pos = [0,0.75];
+									var toAdd = new Unit(pos, "circle", this);
+									while (colliders.somethingCollidesWith(toAdd))
 									{
-										drawGroup.add(toAdd);
+										pos[0] += 0.25;
+										toAdd = new Unit(pos, "circle", this);
 									}
-									else
-									{
-										console.log('Cannot spawn until it doesn\'t collide');
-									}
+									drawGroup.add(toAdd);
+									
 								}
 							}
 						}
@@ -460,15 +457,14 @@
 								}
 								else
 								{
-									var toAdd = new Unit([0,-0.75], "triangle", this)
-									if (!colliders.somethingCollidesWith(toAdd))
+									var pos = [0,-0.75];
+									var toAdd = new Unit(pos, "triangle", this)
+									while (colliders.somethingCollidesWith(toAdd))
 									{
-										drawGroup.add(toAdd);
+										pos[0] += 0.25;
+										toAdd = new Unit(pos, "circle", this);
 									}
-									else
-									{
-										console.log('Cannot spawn until it doesn\'t collide');
-									}
+									drawGroup.add(toAdd);
 								}
 							}
 							else
@@ -479,15 +475,14 @@
 								}
 								else
 								{
-									var toAdd = new Unit([0,0.75], "triangle", this);
-									if (!colliders.somethingCollidesWith(toAdd))
+									var pos = [0,0.75];
+									var toAdd = new Unit(pos, "triangle", this)
+									while (colliders.somethingCollidesWith(toAdd))
 									{
-										drawGroup.add(toAdd);
+										pos[0] += 0.25;
+										toAdd = new Unit(pos, "circle", this);
 									}
-									else
-									{
-										console.log('Cannot spawn until it doesn\'t collide');
-									}
+									drawGroup.add(toAdd);
 								}
 							}
 						}
