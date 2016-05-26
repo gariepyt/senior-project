@@ -431,15 +431,15 @@
 								}
 								else
 								{
-									var pos = [0,0.75];
-									var toAdd = new Unit(pos, "circle", this);
-									while (colliders.somethingCollidesWith(toAdd))
+									var toAdd = new Unit([0,0.75], "circle", this);
+									while (!colliders.somethingCollidesWith(toAdd))
 									{
-										pos[0] += 0.75;
-										toAdd = new Unit(pos, "circle", this);
+										drawGroup.add(toAdd);
 									}
-									drawGroup.add(toAdd);
-									
+									else
+									{
+										console.log('Cannot spawn until it doesn\'t collide');
+									}
 								}
 							}
 						}
