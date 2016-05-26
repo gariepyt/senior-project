@@ -148,14 +148,14 @@
 						function update()
 						{
 							var i; var j; 
-							// var combinedGroup = new DrawGroup(maxUnits, [0.0, 1.0, 0.0, 1.0])
-							// for(i=0; i < myGroups.length; i++)
-							// {
-							// 	for(j=0; j < myGroups.length; j++)
-							// 	{
-							// 		combinedGroup.group.push(myGroups[i].group[j]);
-							// 	}
-							// }
+							var combinedGroup = new DrawGroup(maxUnits, [0.0, 1.0, 0.0, 1.0])
+							for(i=0; i < myGroups.length; i++)
+							{
+								for(j=0; j < myGroups.length; j++)
+								{
+									combinedGroup.group.push(myGroups[i].group[j]);
+								}
+							}
 
 							/*========================== USER EVENTS ==================================*/
 							if (mouseDownEvent)
@@ -174,7 +174,7 @@
 							if (keyboardEvent != null)
 							{
 								console.log('kb event');
-								p1.handleEvents(keyboardEvent, toDraw);
+								p1.handleEvents(keyboardEvent, toDraw, toDraw);
 								keyboardEvent = null;
 							}
 
@@ -311,6 +311,29 @@
 						}
 					}
 
+					DrawGroup.prototype.somethingCollidesWith = function(entity)
+					{
+						var j;
+						for(j=0; j < this.group.length; j++) //check for collisions
+						{
+							console.log("checking");
+							if(entity.center != this.group[j].center)
+							{
+								var iTopRight = [entity.right, entity.top]; 
+								var iTopLeft = [entity.left, entity.top];
+								var iBottomRight = [entity.right, entity.bottom];
+								var iBottomLeft = [entity.left, entity.bottom];
+								
+								if(this.group[j].in(iTopRight) || this.group[j].in(iTopLeft) ||
+									this.group[j].in(iBottomRight) || this.group[j].in(iBottomLeft))
+								{
+									return true;
+								}
+							}
+						}
+						return false;
+					}
+
 					/*========================================================  PLAYER CLASS =======================================================*/
 
 					function Player(human)
@@ -325,7 +348,7 @@
 						this.scissors = 100;
 					}
 
-					Player.prototype.spawnRock = function(drawGroup)
+					Player.prototype.spawnRock = function(drawGroup, colliders=null)
 					{
 						//TODO: spawn in different location if colliding
 						cost = 50; //TODO: tune me
@@ -335,16 +358,46 @@
 							//TODO: spawn position based on whether or not is human
 							if (this.human)
 							{
-								drawGroup.add(new Unit([0,-0.75], "rectangle", this));
+								if (colliders == null)
+								{
+									drawGroup.add(new Unit([0,-0.75], "rectangle", this));
+								}
+								else
+								{
+									var toAdd = new Unit([0,-0.75], "rectangle", this);
+									if (!colliders.somethingCollidesWith(toAdd))
+									{
+										drawGroup.add(toAdd);
+									}
+									else
+									{
+										console.log('Cannot spawn until it doesn\'t collide');
+									}
+								}
 							}
 							else
 							{
-								drawGroup.add(new Unit([0,0.75], "rectangle", this));
+								if (colliders == null)
+								{
+									drawGroup.add(new Unit([0,0.75], "rectangle", this));
+								}
+								else
+								{
+									var toAdd = new Unit([0,0.75], "rectangle", this);
+									if (!colliders.somethingCollidesWith(toAdd))
+									{
+										drawGroup.add(toAdd);
+									}
+									else
+									{
+										console.log('Cannot spawn until it doesn\'t collide');
+									}
+								}
 							}
 						}
 					}
 
-					Player.prototype.spawnPaper = function(drawGroup)
+					Player.prototype.spawnPaper = function(drawGroup, colliders=null)
 					{
 						//TODO: spawn in different location if colliding
 						cost = 50; // TODO: tune me
@@ -353,16 +406,46 @@
 							this.paper -= cost;
 							if (this.human)
 							{
-								drawGroup.add(new Unit([0,-0.75], "circle", this));
+								if (colliders == null)
+								{
+									drawGroup.add(new Unit([0,-0.75], "circle", this));
+								}
+								else
+								{
+									var toAdd = new Unit([0,-0.75], "circle", this);
+									if (!colliders.somethingCollidesWith(toAdd))
+									{
+										drawGroup.add(toAdd);
+									}
+									else
+									{
+										console.log('Cannot spawn until it doesn\'t collide');
+									}
+								}
 							}
 							else
 							{
-								drawGroup.add(new Unit([0,0.75], "circle", this));
+								if (colliders == null)
+								{
+									drawGroup.add(new Unit([0,0.75], "circle", this));
+								}
+								else
+								{
+									var pos = [0,0.75];
+									var toAdd = new Unit(pos, "circle", this);
+									while (colliders.somethingCollidesWith(toAdd))
+									{
+										pos[0] += 0.75;
+										toAdd = new Unit(pos, "circle", this);
+									}
+									drawGroup.add(toAdd);
+									
+								}
 							}
 						}
 					}
 
-					Player.prototype.spawnScissors = function(drawGroup)
+					Player.prototype.spawnScissors = function(drawGroup, colliders=null)
 					{
 						//TODO: spawn in different location if colliding
 						cost = 50; // TODO: tune me
@@ -371,31 +454,58 @@
 							this.scissors -= cost;
 							if (this.human)
 							{
-								drawGroup.add(new Unit([0,-0.75], "triangle", this));
+								if (colliders == null)
+								{
+									drawGroup.add(new Unit([0,-0.75], "triangle", this));
+								}
+								else
+								{
+									var toAdd = new Unit([0,-0.75], "triangle", this)
+									if (!colliders.somethingCollidesWith(toAdd))
+									{
+										drawGroup.add(toAdd);
+									}
+									else
+									{
+										console.log('Cannot spawn until it doesn\'t collide');
+									}
+								}
 							}
 							else
 							{
-								drawGroup.add(new Unit([0,0.75], "triangle", this));
+								if (colliders == null)
+								{
+									drawGroup.add(new Unit([0,0.75], "triangle", this));
+								}
+								else
+								{
+									var toAdd = new Unit([0,0.75], "triangle", this);
+									if (!colliders.somethingCollidesWith(toAdd))
+									{
+										drawGroup.add(toAdd);
+									}
+									else
+									{
+										console.log('Cannot spawn until it doesn\'t collide');
+									}
+								}
 							}
 						}
 					}
 
-					Player.prototype.handleEvents = function(e, drawGroup)
+					Player.prototype.handleEvents = function(e, toDraw, colliders)
 					{
 						if (e.keyCode == 81)
 						{
-							console.log('q pressed');
-							this.spawnRock(drawGroup);
+							this.spawnRock(toDraw, colliders);
 						}
 						else if (e.keyCode == 87)
 						{
-							console.log('w pressed');
-							this.spawnPaper(drawGroup);
+							this.spawnPaper(toDraw, colliders);
 						}
 						else if (e.keyCode == 69)
 						{
-							console.log('e pressed');
-							this.spawnScissors(drawGroup);
+							this.spawnScissors(toDraw, colliders);
 						}
 					}
 
@@ -427,7 +537,7 @@
 							this.range = 1; //TODO: tune me
 							this.speed = 0.05;
 							this.attack = 1; //TODO: tune me
-							this.gObject = new Circle(center, 0.125);
+							this.gObject = new Circle(center, 0.06125);
 						}
 
 						this.center = this.gObject.center;
