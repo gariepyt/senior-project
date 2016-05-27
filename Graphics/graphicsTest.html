@@ -176,6 +176,50 @@
 						setInterval(update, 1);
 
 						setInterval(drawLoop, 16);
+
+				        /*========================================================  SAVE GAME =======================================================*/
+				        var saveButton = document.getElementById("save");
+				        var id;
+				        saveButton.onclick = function() {
+				          if (Cookie.get('id')) {
+				            id = Cooke.get('id');
+
+				          } else {
+				            id = function() {
+				              //Get Game ID from server
+				              var httpRequest = new XMLHttpRequest();
+				              var url = "http://web.engr.oregonstate.edu/~sibailaj/framework/createid.php";
+				              var newid;
+
+				              if (httpRequest) {
+				                httpRequest.onreadystatechange = handle;
+				                httpRequest.open('GET', url, true);
+				                httpRequest.send();
+				              }
+
+				              function handle() {
+				                if (httpRequest.readyState === 4 && httpRequest.status === 200) {
+				                  //Display Response
+				                  document.getElementById("here").innerHTML = httpRequest.responseText;
+
+				                  //Set newid
+				                  newid = httpRequest.responseText;             
+
+				                }
+				                else {
+				                  //alert("Error: Bad Request");
+				                }
+				              }
+
+				            }
+				          }
+				          //Pass in unitArray array
+				          //An array containing all units on board
+				          //Ex. unitArray[0] = {unit:"rock", ...}
+				          //Ex. unitArray[1] = {unit:"scissors", ...}
+				          //prepData(id, unitArray);
+				        }
+
 					}
 
 					function DrawGroup(maxUnits, color)
@@ -647,6 +691,9 @@
 						}
 					}
 
+
+
+
 					/*========================================================  FILE RETRIEVAL AND UPLOAD REQUESTS =======================================================*/
 
 					/**
@@ -714,9 +761,36 @@
 						}
 						return unitArray;
 					}
+
+					/**
+					 * prepData(id, unitArray)
+					 * Function that formats gamedata object before sending
+					 * to server to save as data files.
+					 * 
+					 * Parameters: id (Integer), unitArray (Array of unit
+					 * objects)
+					 * Return Value: true (if all requests were successful)
+					*/
+			        function prepData(id, unitArray) {
+			        	var success;
+
+			          for (var i = 0; i < unitArray.length; i++) {
+				            unitArray[i].id = id;
+				            unitArray[i].index = i;
+
+				            if (i == 0) {
+				              unitArray[i].create = 1;
+				            } else {
+			              	unitArray[i].create = 0;
+			            	}
+			          		success = setFile(unitArray[i]);
+			        	}
+			        	return success;
+			        }
 			</script>
 	</head>
 	<body onload="init()">
 			<canvas id="mycanvas" width="800" height="500"></canvas>
+			<input type="button" id="save" value="Save Game">
 	</body>
 </html>
