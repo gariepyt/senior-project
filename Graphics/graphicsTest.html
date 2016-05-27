@@ -18,7 +18,8 @@
 					{
 						gl_FragColor = uColor;
 					}
-			</script>        
+			</script>
+			<script src="/path/to/js.cookie.js"></script>        
 			<script type="text/javascript">
 
 					var gl;
@@ -202,8 +203,9 @@
 				                  //Display Response
 				                  document.getElementById("here").innerHTML = httpRequest.responseText;
 
-				                  //Set newid
-				                  newid = httpRequest.responseText;             
+				                  //Set id cookie
+				                  id = httpRequest.responseText;
+				                  Cookies.set('id', id);             
 
 				                }
 				                else {
