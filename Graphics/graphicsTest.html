@@ -142,8 +142,8 @@
 						toDraw.add(r1);
 						toDraw.add(r2);
 						toDraw.add(r3);
-						p1.spawnRock(toDraw);
-						p2.spawnRock(toDraw);
+						p1.spawnPaper(toDraw, toDraw);
+						p2.spawnPaper(toDraw, toDraw);
 
 						function update()
 						{
@@ -300,7 +300,8 @@
 									var iBottomLeft = [this.group[i].left, this.group[i].bottom];
 									
 									if(this.group[j].in(iTopRight) || this.group[j].in(iTopLeft) ||
-										this.group[j].in(iBottomRight) || this.group[j].in(iBottomLeft))
+										this.group[j].in(iBottomRight) || this.group[j].in(iBottomLeft) ||
+										this.group[j].in(this.group[i].center))
 									{
 										this.group[i].collisionTrigger(this.group[j]);
 
@@ -316,7 +317,6 @@
 						var j;
 						for(j=0; j < this.group.length; j++) //check for collisions
 						{
-							console.log("checking");
 							if(entity.center != this.group[j].center)
 							{
 								var iTopRight = [entity.right, entity.top]; 
@@ -325,7 +325,8 @@
 								var iBottomLeft = [entity.left, entity.bottom];
 								
 								if(this.group[j].in(iTopRight) || this.group[j].in(iTopLeft) ||
-									this.group[j].in(iBottomRight) || this.group[j].in(iBottomLeft))
+									this.group[j].in(iBottomRight) || this.group[j].in(iBottomLeft) ||
+									this.group[j].in(entity.center))
 								{
 									return true;
 								}
@@ -343,15 +344,15 @@
 						this.human = human;
 
 						//RESOURCES
-						this.rock = 100;
-						this.paper = 100;
-						this.scissors = 100;
+						this.rock = 200;
+						this.paper = 200;
+						this.scissors = 200;
 					}
 
 					Player.prototype.spawnRock = function(drawGroup, colliders=null)
 					{
 						//TODO: spawn in different location if colliding
-						cost = 50; //TODO: tune me
+						var cost = 50; //TODO: tune me
 						if (this.rock > cost)
 						{
 							this.rock -= cost;
@@ -364,12 +365,14 @@
 								}
 								else
 								{
+									console.log("huh");
+
 									var pos = [0,-0.75];
 									var toAdd = new Unit(pos, "rectangle", this);
 									while (colliders.somethingCollidesWith(toAdd))
 									{
 										pos[0] += 0.25;
-										toAdd = new Unit(pos, "circle", this);
+										toAdd = new Unit(pos, "rectangle", this);
 									}
 									drawGroup.add(toAdd);
 								}
@@ -387,18 +390,22 @@
 									while (colliders.somethingCollidesWith(toAdd))
 									{
 										pos[0] += 0.25;
-										toAdd = new Unit(pos, "circle", this);
+										toAdd = new Unit(pos, "rectangle", this);
 									}
 									drawGroup.add(toAdd);
 								}
 							}
+						}
+						else
+						{
+							console.log("Not enough rock resources");
 						}
 					}
 
 					Player.prototype.spawnPaper = function(drawGroup, colliders=null)
 					{
 						//TODO: spawn in different location if colliding
-						cost = 50; // TODO: tune me
+						var cost = 50; // TODO: tune me
 						if (this.paper > cost)
 						{
 							this.paper -= cost;
@@ -445,7 +452,7 @@
 					Player.prototype.spawnScissors = function(drawGroup, colliders=null)
 					{
 						//TODO: spawn in different location if colliding
-						cost = 50; // TODO: tune me
+						var cost = 50; // TODO: tune me
 						if (this.scissors > cost)
 						{
 							this.scissors -= cost;
@@ -462,7 +469,7 @@
 									while (colliders.somethingCollidesWith(toAdd))
 									{
 										pos[0] += 0.25;
-										toAdd = new Unit(pos, "circle", this);
+										toAdd = new Unit(pos, "triangle", this);
 									}
 									drawGroup.add(toAdd);
 								}
@@ -480,7 +487,7 @@
 									while (colliders.somethingCollidesWith(toAdd))
 									{
 										pos[0] += 0.25;
-										toAdd = new Unit(pos, "circle", this);
+										toAdd = new Unit(pos, "triangle", this);
 									}
 									drawGroup.add(toAdd);
 								}
@@ -572,7 +579,6 @@
 						this.health -= damage;
 						if (this.health == 0)
 						{
-							console.log("Removing");
 							this.remove();
 						}
 					}
@@ -681,7 +687,6 @@
 
 					Resource.prototype.claim = function(player)
 					{
-						console.log("player" + player);
 						this.player = player;
 					}
 
@@ -691,17 +696,14 @@
 						{
 							if( this.shape == "rectangle")
 							{
-								console.log("rock " + this.player.rock);
 								this.player.rock += this.acquireRate;
 							}
 							else if(this.shape == "triangle")
 							{
-								console.log("scissors " + this.player.scissors);
 								this.player.scissors += this.acquireRate;
 							}
 							else if(this.shape == "circle")
 							{
-								console.log("paper " + this.player.paper)
 								this.player.paper += this.acquireRate;
 							}
 						}
@@ -711,7 +713,6 @@
 					{
 						if (collideWith.constructor.name == "Unit")
 						{
-							console.log("collide with resource!");
 							this.claim(collideWith.owner);
 						}
 					}
