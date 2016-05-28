@@ -163,7 +163,10 @@
 								mouseDownEvent = false;	
 								for(i=0; i < combinedGroup.group.length; i++)
 								{
-									combinedGroup.group[i].mouseDown(old_x, old_y);	
+									if (combinedGroup.group[i].constructor.name == "Unit")
+									{
+										combinedGroup.group[i].mouseDown(old_x, old_y);	
+									}
 								}
 							}
 							else if (mouseUpEvent)
