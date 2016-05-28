@@ -35,6 +35,7 @@
 						var old_x, old_y;
 						var mouseDownEvent;
 						var mouseUpEvent;
+						var keyboardEvent = null;
 						var mouseDown=function(e) 
 						{
 							mouseUpEvent = false;
@@ -63,10 +64,16 @@
 							e.preventDefault();
 						};
 
+						var keyboardEvents=function(e)
+						{
+							keyboardEvent = e;
+						}
+
 						canvas.addEventListener("mousedown", mouseDown, false);
 						canvas.addEventListener("mouseup", mouseUp, false);
 						canvas.addEventListener("mouseout", mouseUp, false);
 						canvas.addEventListener("mousemove", mouseMove, false);
+						document.addEventListener("keydown", keyboardEvents, false);
 
 						/*========================= CANVAS AND SHADERS ========================= */
 					    gl = canvas.getContext("experimental-webgl"); //
@@ -107,33 +114,58 @@
 						var selected = new DrawGroup(maxUnits, [0.0, 0.3, 0.0, 1.0]); //FIXME: can't seem to color this group properly and rects in this group don't move
 						var myGroups = [toDraw, selected];
 
-						r1 = new Rectangle([0, 0], 0.125, 0.125);
-						r2 = new Rectangle([.5, .5], 0.125, 0.125);
-						r3 = new Rectangle([0, 0.25], 0.25, 0.25);
-						r4 = new Rectangle([0.25, 0], 0.25, 0.25);
+						// r1 = new Rectangle([0, 0], 0.125, 0.125);
+						// r2 = new Rectangle([.5, .5], 0.125, 0.125);
+						// r3 = new Rectangle([0, 0.25], 0.25, 0.25);
+						// r4 = new Rectangle([0.25, 0], 0.25, 0.25);
 
-						t1 = new Triangle([0, 0], 0.125, 0.125);
-						t2 = new Triangle([.5, .5], 0.125, 0.125);
+						// t1 = new Triangle([0, 0], 0.125, 0.125);
+						// t2 = new Triangle([.5, .5], 0.125, 0.125);
 
-						c1 = new Circle([0, 0], 0.125);
-						c2 = new Circle([0.5, 0.5], 0.125);
+						// c1 = new Circle([0, 0], 0.125);
+						// c2 = new Circle([0.5, 0.5], 0.125);
 
-						toDraw.group.push(c1);
-						toDraw.group.push(c2);
+						// toDraw.group.push(c1);
+						// toDraw.group.push(c2);
+
+						//Unit(center, shape, owner)
+						p1 = new Player(true);
+						p2 = new Player(false);
+
+						// u1 = new Unit([0, 0], "rectangle", p1);
+						// u2 = new Unit([0.5, 0.5], "triangle", p2);
+
+						r1 = new Resource([0, 0], "rectangle");
+						r2 = new Resource([-0.5, 0], "triangle");
+						r3 = new Resource([0.5, 0], "circle");
+
+						toDraw.add(r1);
+						toDraw.add(r2);
+						toDraw.add(r3);
+						p1.spawnPaper(toDraw, toDraw);
+						p2.spawnPaper(toDraw, toDraw);
 
 						function update()
 						{
-							var i; var j;
+							var i; var j; 
+							var combinedGroup = new DrawGroup(maxUnits, [0.0, 1.0, 0.0, 1.0])
+							for(i=0; i < myGroups.length; i++)
+							{
+								for(j=0; j < myGroups[i].group.length; j++)
+								{
+									combinedGroup.group.push(myGroups[i].group[j]);
+								}
+							}
 
 							/*========================== USER EVENTS ==================================*/
 							if (mouseDownEvent)
 							{
 								mouseDownEvent = false;	
-								for(i=0; i < myGroups.length; i++)
+								for(i=0; i < combinedGroup.group.length; i++)
 								{
-									for(j=0; j < myGroups[i].group.length; j++)
+									if (combinedGroup.group[i].constructor.name == "Unit")
 									{
-										myGroups[i].group[j].mouseDown(old_x, old_y);
+										combinedGroup.group[i].mouseDown(old_x, old_y);	
 									}
 								}
 							}
@@ -142,25 +174,48 @@
 								mouseUpEvent = false;
 							}
 
-							/*======================COLLISON CHECKS================================*/
-							for(i=0; i < myGroups.length; i++)
+							if (keyboardEvent != null)
 							{
-								myGroups[i].checkForCollisions();
+								console.log('kb event');
+								p1.handleEvents(keyboardEvent, toDraw, combinedGroup);
+								keyboardEvent = null;
 							}
 
-							/*========================== UPDATES ==================================*/
-							for(i=0; i < myGroups.length; i++)
+							/*====================== COLLISON CHECKS ================================*/
+							combinedGroup.checkForCollisions(); 
+
+							/*============================ CHECK ATTACKS ==========================*/
+							for(i=0; i < combinedGroup.group.length; i++)
 							{
-								for(j=0; j < myGroups[i].group.length; j++)
+								for(j=0; j < combinedGroup.group.length; j++)
 								{
-									myGroups[i].group[j].update();
+									if(i != j && combinedGroup.group[i].constructor.name == "Unit")
+									{	
+										if (combinedGroup.group[i].inRange(combinedGroup.group[j]) && combinedGroup.group[i].owner != combinedGroup.group[j].owner && combinedGroup.group[j].constructor.name == "Unit")
+										{
+											//TODO: start attacking animation
+											combinedGroup.group[i].dealDamage(combinedGroup.group[j]);
+										}
+										else
+										{
+											//TODO: end attacking animation
+										}
+									}
 								}
+							}
+
+
+							/*========================== UPDATES ==================================*/
+							for(i=0; i < combinedGroup.group.length; i++)
+							{
+								combinedGroup.group[i].update()
 							}
 						}
 
 						function drawLoop()
 						{
 							toDraw.clear();
+							selected.clear();
 							gl.clear(gl.COLOR_BUFFER_BIT);
 							var i; var j;
 							for(i=0; i < myGroups.length; i++)
@@ -178,7 +233,7 @@
 						setInterval(drawLoop, 16);
 					}
 
-					function DrawGroup(maxUnits, color)
+					function DrawGroup(maxUnits, color=[])
 					{
 						this.v = new Float32Array(maxUnits*12);
 						var i;
@@ -189,6 +244,19 @@
 						this.index = 0;
 						this.group = [];
 						this.color = color;
+					}
+
+					DrawGroup.prototype.add = function(toAdd)
+					{
+						toAdd.dGroup = this;
+						toAdd.index = this.group.length;
+						this.group.push(toAdd); 
+					}
+
+					DrawGroup.prototype.remove = function(toRemove)
+					{
+						toRemove.dGroup = null;
+						this.group.splice(toRemove.index, toRemove.index+1);
 					}
 
 					DrawGroup.prototype.render = function()
@@ -236,18 +304,10 @@
 									var iBottomLeft = [this.group[i].left, this.group[i].bottom];
 									
 									if(this.group[j].in(iTopRight) || this.group[j].in(iTopLeft) ||
-										this.group[j].in(iBottomRight) || this.group[j].in(iBottomLeft))
+										this.group[j].in(iBottomRight) || this.group[j].in(iBottomLeft) ||
+										this.group[j].in(this.group[i].center))
 									{
-										this.group[i].moving = false;
-										var newPos;
-										var distanceToMove = 0.01; //TODO: Tune me
-										xvector = this.group[i].center[0] - this.group[j].center[0];
-										yvector = this.group[i].center[1] - this.group[j].center[1];
-										mag = Math.sqrt(xvector * xvector + yvector * yvector);
-										xunit = 1 * xvector / mag;
-										yunit = 1 * yvector / mag;
-										newPos = [this.group[i].center[0] + xunit * distanceToMove, this.group[i].center[1] + yunit * distanceToMove]
-										this.group[i].setPos(newPos);
+										this.group[i].collisionTrigger(this.group[j]);
 
 										//TODO: resume moving once obstacle is moved. pathfinding related
 									}
@@ -255,6 +315,436 @@
 							}
 						}
 					}
+
+					DrawGroup.prototype.somethingCollidesWith = function(entity)
+					{
+						var j;
+						for(j=0; j < this.group.length; j++) //check for collisions
+						{
+							if(entity.center != this.group[j].center)
+							{
+								var iTopRight = [entity.right, entity.top]; 
+								var iTopLeft = [entity.left, entity.top];
+								var iBottomRight = [entity.right, entity.bottom];
+								var iBottomLeft = [entity.left, entity.bottom];
+								
+								if(this.group[j].in(iTopRight) || this.group[j].in(iTopLeft) ||
+									this.group[j].in(iBottomRight) || this.group[j].in(iBottomLeft) ||
+									this.group[j].in(entity.center))
+								{
+									return true;
+								}
+							}
+						}
+						return false;
+					}
+
+					/*========================================================  PLAYER CLASS =======================================================*/
+
+					function Player(human)
+					{
+						/*ai: boolean determining whether or not this is the ai player*/
+
+						this.human = human;
+
+						//RESOURCES
+						this.rock = 200;
+						this.paper = 200;
+						this.scissors = 200;
+					}
+
+					Player.prototype.spawnRock = function(drawGroup, colliders=null)
+					{
+						//TODO: spawn in different location if colliding
+						var cost = 50; //TODO: tune me
+						if (this.rock > cost)
+						{
+							this.rock -= cost;
+							//TODO: spawn position based on whether or not is human
+							if (this.human)
+							{
+								if (colliders == null)
+								{
+									drawGroup.add(new Unit([0,-0.75], "rectangle", this));
+								}
+								else
+								{
+									console.log("huh");
+
+									var pos = [0,-0.75];
+									var toAdd = new Unit(pos, "rectangle", this);
+									while (colliders.somethingCollidesWith(toAdd))
+									{
+										pos[0] += 0.25;
+										toAdd = new Unit(pos, "rectangle", this);
+									}
+									drawGroup.add(toAdd);
+								}
+							}
+							else
+							{
+								if (colliders == null)
+								{
+									drawGroup.add(new Unit([0,0.75], "rectangle", this));
+								}
+								else
+								{
+									var pos = [0,0.75];
+									var toAdd = new Unit(pos, "rectangle", this);
+									while (colliders.somethingCollidesWith(toAdd))
+									{
+										pos[0] += 0.25;
+										toAdd = new Unit(pos, "rectangle", this);
+									}
+									drawGroup.add(toAdd);
+								}
+							}
+						}
+						else
+						{
+							console.log("Not enough rock resources");
+						}
+					}
+
+					Player.prototype.spawnPaper = function(drawGroup, colliders=null)
+					{
+						//TODO: spawn in different location if colliding
+						var cost = 50; // TODO: tune me
+						if (this.paper > cost)
+						{
+							this.paper -= cost;
+							if (this.human)
+							{
+								if (colliders == null)
+								{
+									drawGroup.add(new Unit([0,-0.75], "circle", this));
+								}
+								else
+								{
+									var pos = [0,-0.75];
+									var toAdd = new Unit(pos, "circle", this);
+									while (colliders.somethingCollidesWith(toAdd))
+									{
+										pos[0] += 0.25;
+										toAdd = new Unit(pos, "circle", this);
+									}
+									drawGroup.add(toAdd);
+								}
+							}
+							else
+							{
+								if (colliders == null)
+								{
+									drawGroup.add(new Unit([0,0.75], "circle", this));
+								}
+								else
+								{
+									var pos = [0,0.75];
+									var toAdd = new Unit(pos, "circle", this);
+									while (colliders.somethingCollidesWith(toAdd))
+									{
+										pos[0] += 0.25;
+										toAdd = new Unit(pos, "circle", this);
+									}
+									drawGroup.add(toAdd);
+									
+								}
+							}
+						}
+					}
+
+					Player.prototype.spawnScissors = function(drawGroup, colliders=null)
+					{
+						//TODO: spawn in different location if colliding
+						var cost = 50; // TODO: tune me
+						if (this.scissors > cost)
+						{
+							this.scissors -= cost;
+							if (this.human)
+							{
+								if (colliders == null)
+								{
+									drawGroup.add(new Unit([0,-0.75], "triangle", this));
+								}
+								else
+								{
+									var pos = [0,-0.75];
+									var toAdd = new Unit(pos, "triangle", this)
+									while (colliders.somethingCollidesWith(toAdd))
+									{
+										pos[0] += 0.25;
+										toAdd = new Unit(pos, "triangle", this);
+									}
+									drawGroup.add(toAdd);
+								}
+							}
+							else
+							{
+								if (colliders == null)
+								{
+									drawGroup.add(new Unit([0,0.75], "triangle", this));
+								}
+								else
+								{
+									var pos = [0,0.75];
+									var toAdd = new Unit(pos, "triangle", this)
+									while (colliders.somethingCollidesWith(toAdd))
+									{
+										pos[0] += 0.25;
+										toAdd = new Unit(pos, "triangle", this);
+									}
+									drawGroup.add(toAdd);
+								}
+							}
+						}
+					}
+
+					Player.prototype.handleEvents = function(e, toDraw, colliders)
+					{
+						if (e.keyCode == 81)
+						{
+							this.spawnRock(toDraw, colliders);
+						}
+						else if (e.keyCode == 87)
+						{
+							this.spawnPaper(toDraw, colliders);
+						}
+						else if (e.keyCode == 69)
+						{
+							this.spawnScissors(toDraw, colliders);
+						}
+					}
+
+					/*========================================================  UNIT CLASS =======================================================*/
+
+					function Unit(center, shape, owner)
+					{
+						this.owner = owner; //determines whether this belongs to the player or the AI
+						this.shape = shape;
+						if(this.shape == "rectangle")
+						{
+							this.health = 1500; 
+							this.range = 1; //TODO: tune me
+							this.speed = 0.05;
+							this.attack = 1; // TODO: tune me
+							this.gObject = new Rectangle(center, 0.125, 0.125);
+						}
+						else if(this.shape == "triangle")
+						{
+							this.health = 1000; 
+							this.range = 1; //TODO: tune me
+							this.speed = 0.05;
+							this.attack = 1; // TODO: tune me
+							this.gObject = new Triangle(center, 0.125, 0.125);
+						}
+						else if(this.shape == "circle")
+						{
+							this.health = 500; 
+							this.range = 1; //TODO: tune me
+							this.speed = 0.05;
+							this.attack = 1; //TODO: tune me
+							this.gObject = new Circle(center, 0.06125);
+						}
+
+						this.center = this.gObject.center;
+						this.right = this.gObject.right;
+						this.left = this.gObject.left;
+						this.top = this.gObject.top;
+						this.bottom = this.gObject.bottom;
+					}
+
+					Unit.prototype.mouseDown = function(x, y)
+					{
+						this.gObject.mouseDown(x, y);
+						this.center = this.gObject.center;
+						this.right = this.gObject.right;
+						this.left = this.gObject.left;
+						this.top = this.gObject.top;
+						this.bottom = this.gObject.bottom;
+					}
+
+					Unit.prototype.update = function()
+					{
+						this.gObject.update();
+						this.center = this.gObject.center;
+						this.right = this.gObject.right;
+						this.left = this.gObject.left;
+						this.top = this.gObject.top;
+						this.bottom = this.gObject.bottom;
+					}
+
+					Unit.prototype.draw = function(toDraw)
+					{
+						this.gObject.draw(toDraw);
+					}
+
+					Unit.prototype.takeDamage = function(damage)
+					{
+						this.health -= damage;
+						if (this.health == 0)
+						{
+							this.remove();
+						}
+					}
+
+					Unit.prototype.dealDamage = function(opponent)
+					{
+						opponent.takeDamage(this.attack);
+					}
+
+					Unit.prototype.setDestination = function(destination)
+					{
+						this.gObject.setDestination(destination);
+						this.moving = true;
+						this.destination = destination;
+					}
+
+					Unit.prototype.setPos = function(center)
+					{
+						this.center = center;
+						this.gObject.setPos(center);
+						this.right = this.gObject.right;
+						this.left = this.gObject.left;
+						this.top = this.gObject.top;
+						this.bottom = this.gObject.bottom;
+					}
+
+					Unit.prototype.inRange = function(other)
+					{
+						var distance = Math.sqrt(Math.pow(other.center[0] - this.center[0], 2) + Math.pow(other.center[1] - this.center[1], 2));
+						if(distance < this.range)
+						{
+							return true;
+						}
+						else
+						{
+							return false;
+						}
+
+					}
+
+					Unit.prototype.in = function(point)
+					{
+						/*Checks if point is in Unit*/
+						if(point[0] < this.gObject.right && point[0] > this.gObject.left && point[1] < this.gObject.top && point[1] > this.gObject.bottom)
+						{
+							return true;
+						}
+						else
+						{
+							return false;
+						}
+					}
+
+					Unit.prototype.remove = function()
+					{
+						this.dGroup.remove(this);
+					}
+
+					Unit.prototype.collisionTrigger = function(collideWith)
+					{
+						if (collideWith.constructor.name == "Unit")
+						{	
+							this.moving = false;
+							var newPos;
+							var distanceToMove = 0.01; //TODO: Tune me
+							var xvector = this.center[0] - collideWith.center[0];
+							var yvector = this.center[1] - collideWith.center[1];
+							mag = Math.sqrt(xvector * xvector + yvector * yvector);
+							xunit = 1 * xvector / mag;
+							yunit = 1 * yvector / mag;
+							newPos = [this.center[0] + xunit * distanceToMove, this.center[1] + yunit * distanceToMove]
+							this.setPos(newPos);
+						}
+					}
+
+					/*======================================================== RESOURCE CLASS======================================================= */
+
+					function Resource(center, shape)
+					{
+						this.player = null; //instance of player class
+						this.shape = shape;
+						this.acquireRate = 1; //TODO: tune me
+
+						if(this.shape == "rectangle")
+						{
+							//TODO: add color
+							this.gObject = new Rectangle(center, 0.06125, 0.06125);
+						}
+						else if(this.shape == "triangle")
+						{
+							//TODO: add color
+							this.gObject = new Triangle(center, 0.06125, 0.06125);
+						}
+						else if(this.shape == "circle")
+						{
+							//TODO: add color
+							this.gObject = new Circle(center, 0.06125);
+						}
+
+						this.center = this.gObject.center;
+						this.right = this.gObject.right;
+						this.left = this.gObject.left;
+						this.top = this.gObject.top;
+						this.bottom = this.gObject.bottom;
+					}
+
+					Resource.prototype.claim = function(player)
+					{
+						this.player = player;
+					}
+
+					Resource.prototype.update = function()
+					{
+						if (this.player != null)
+						{
+							if( this.shape == "rectangle")
+							{
+								this.player.rock += this.acquireRate;
+							}
+							else if(this.shape == "triangle")
+							{
+								this.player.scissors += this.acquireRate;
+							}
+							else if(this.shape == "circle")
+							{
+								this.player.paper += this.acquireRate;
+							}
+						}
+					}
+
+					Resource.prototype.collisionTrigger = function(collideWith)
+					{
+						if (collideWith.constructor.name == "Unit")
+						{
+							this.claim(collideWith.owner);
+						}
+					}
+
+					Resource.prototype.draw = function(toDraw)
+					{
+						this.gObject.draw(toDraw);
+					}
+
+					Resource.prototype.in = function(point)
+					{
+						/*Checks if point is in Unit*/
+						if(point[0] < this.gObject.right && point[0] > this.gObject.left && point[1] < this.gObject.top && point[1] > this.gObject.bottom)
+						{
+							return true;
+						}
+						else
+						{
+							return false;
+						}
+					}
+
+					Resource.prototype.mouseDown = function(x, y)
+					{
+						this.gObject.mouseDown(x, y);
+					}
+
+					/*======================================================== BASE CLASS ======================================================= */
 
 					/*========================================================  RECTANGLE CLASS =======================================================*/
 
@@ -372,6 +862,8 @@
 							return false;
 						}
 					}
+
+					/*========================================================  TRIANGLE CLASS =======================================================*/
 
 					function Triangle(center, width, height)
 					{
@@ -512,6 +1004,7 @@
 						}
 					}
 
+					/*========================================================  CIRCLE CLASS =======================================================*/
 					function Circle(center, radius, triangles=10)
 					{
 						/*
@@ -609,13 +1102,13 @@
 						var theta = 0;
 						for(i = 0; i < 20; i++)
 						{
-							console.log(theta);
+							// console.log(theta);
 							newScreenPos.push(center[0]); newScreenPos.push(center[1]);
 							newScreenPos.push(center[0] + this.radius * Math.cos(theta)); newScreenPos.push(center[1] + (this.radius * Math.sin(theta)) * aspect);
 							theta += wedgesize;
 							newScreenPos.push(center[0] + this.radius * Math.cos(theta)); newScreenPos.push(center[1] + (this.radius * Math.sin(theta)) * aspect);
 						}
-						console.log(newScreenPos);
+						// console.log(newScreenPos);
 						this.screenPos = newScreenPos;
 
 						this.center = center;
@@ -649,6 +1142,6 @@
 			</script>
 	</head>
 	<body onload="init()">
-			<canvas id="mycanvas" width="800" height="500"></canvas>
+			<canvas id="mycanvas" width="1600" height="1000"></canvas>
 	</body>
 </html>
