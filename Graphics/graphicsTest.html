@@ -176,7 +176,59 @@
 							/*========================== USER EVENTS ==================================*/
 							if (mouseUpEvent)
 							{
+								mouseDownEvent = false;
 								mouseUpEvent = false;
+								if (!shortClick)
+								{
+									//TODO: Clear all selected stuff
+									shortClick = true;
+									var corner1x = 2 * (up_x / canvas.width) - 1;
+									var corner1y = -2 * (up_y / canvas.height) + 1;
+									var corner2x = 2 * (down_x / canvas.width) - 1;
+									var corner2y = -2 * (down_y / canvas.height) + 1;
+									if (corner2x > corner1x)
+									{
+										var width = corner2x - corner1x;
+										var centerx = width / 2 + corner1x;
+									}
+									else
+									{
+										var width = corner1x - corner2x;
+										var centerx = width / 2 + corner2x;
+									}
+									if (corner2y > corner1y)
+									{
+										var height = corner2y - corner1y;
+										var centery =  height / 2 + corner1y;
+									}
+									else
+									{
+										var height = corner1y - corner2y;
+										var centery = height / 2 + corner2y;
+									}
+
+									var selectAllRect = new Rectangle([centerx, centery], width, height)
+									var i;
+									for(i = 0; i < combinedGroup.group.length; i++)
+									{										
+										var iTopRight = [selectAllRect.right, selectAllRect.top]; 
+										var iTopLeft = [selectAllRect.left, selectAllRect.top];
+										var iBottomRight = [selectAllRect.right, selectAllRect.bottom];
+										var iBottomLeft = [selectAllRect.left, selectAllRect.bottom];
+										
+										if(combinedGroup.group[i].in(iTopRight) || combinedGroup.group[i].in(iTopLeft) ||
+											combinedGroup.group[i].in(iBottomRight) || combinedGroup.group[i].in(iBottomLeft) ||
+											combinedGroup.group[i].in(selectAllRect.center))
+										{
+											combinedGroup.group[i].select();
+										}
+									}
+									console.log("center " + centerx + ', ' + centery);
+									console.log("down: " + corner1x + ', ' + corner1y);
+									console.log("up: " + corner2x + ', ' + corner2y);
+								}
+
+								//FOR UNIT SPECIFIC MOUSE EVENTS
 								for(i=0; i < combinedGroup.group.length; i++)
 								{
 									if (combinedGroup.group[i].constructor.name == "Unit" && 
@@ -187,13 +239,7 @@
 											if (shortClick)
 											{
 												combinedGroup.group[i].click(old_x, old_y);	
-											}
-											else
-											{
-												shortClick = true;
-												// console.log("old: " + down_x + ', ' + down_y);
-												// console.log("up: " + up_x + ', ' + up_y);
-											}
+											}											
 										}
 										else if (mouseButton == 2)
 										{
@@ -201,6 +247,10 @@
 										}
 									}
 								}
+							}
+							else if (mouseDownEvent && !shortClick)
+							{
+								console.log("Mouse is being held down...consider drawing the click and drag rect");
 							}
 
 							if (keyboardEvent != null)
@@ -597,6 +647,22 @@
 						this.bottom = this.gObject.bottom;
 					}
 
+					Unit.prototype.select = function()
+					{
+						this.remove();
+						this.owner.selected.add(this);
+						this.selected = true;
+						console.log("Selected");
+					}
+
+					Unit.prototype.deselect = function()
+					{
+						this.remove();
+						this.owner.standard.add(this);
+						this.selected = false;
+						console.log("deselected");
+					}
+
 					Unit.prototype.click = function(x, y)
 					{
 						this.gObject.click(x, y);
@@ -606,20 +672,14 @@
 						{
 							if (this.in([normalX, normalY]))
 							{
-								this.remove();
-								this.owner.selected.add(this);
-								this.selected = true;
-								console.log("Selected");
+								this.select();
 							} 							
 						}
 						else
 						{
 							if (this.in([normalX, normalY]))
 							{
-								this.remove();
-								this.owner.standard.add(this);
-								this.selected = false;
-								console.log("deselected");
+								this.deselect();
 							} 							
 						}
 
