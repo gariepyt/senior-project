@@ -208,24 +208,27 @@
 									}
 
 									var selectAllRect = new Rectangle([centerx, centery], width, height)
+									var topRight = [selectAllRect.right, selectAllRect.top]; 
+									var topLeft = [selectAllRect.left, selectAllRect.top];
+									var bottomRight = [selectAllRect.right, selectAllRect.bottom];
+									var bottomLeft = [selectAllRect.left, selectAllRect.bottom];
 									var i;
 									for(i = 0; i < combinedGroup.group.length; i++)
-									{										
-										var iTopRight = [selectAllRect.right, selectAllRect.top]; 
-										var iTopLeft = [selectAllRect.left, selectAllRect.top];
-										var iBottomRight = [selectAllRect.right, selectAllRect.bottom];
-										var iBottomLeft = [selectAllRect.left, selectAllRect.bottom];
-										
-										if(combinedGroup.group[i].in(iTopRight) || combinedGroup.group[i].in(iTopLeft) ||
-											combinedGroup.group[i].in(iBottomRight) || combinedGroup.group[i].in(iBottomLeft) ||
-											combinedGroup.group[i].in(selectAllRect.center))
+									{
+										var iTopRight = [combinedGroup.group[i].right, combinedGroup.group[i].top]; 
+										var iTopLeft = [combinedGroup.group[i].left, combinedGroup.group[i].top];
+										var iBottomRight = [combinedGroup.group[i].right, combinedGroup.group[i].bottom];
+										var iBottomLeft = [combinedGroup.group[i].left, combinedGroup.group[i].bottom];
+										if(combinedGroup.group[i].in(topRight) || combinedGroup.group[i].in(topLeft) ||
+											combinedGroup.group[i].in(bottomRight) || combinedGroup.group[i].in(bottomLeft) ||
+											combinedGroup.group[i].in(selectAllRect.center) ||
+											selectAllRect.in(iTopRight) || selectAllRect.in(iTopLeft) || 
+											selectAllRect.in(iBottomRight) || selectAllRect.in(iBottomLeft) ||
+											selectAllRect.in(combinedGroup.group[i].center))
 										{
 											combinedGroup.group[i].select();
 										}
-									}
-									console.log("center " + centerx + ', ' + centery);
-									console.log("down: " + corner1x + ', ' + corner1y);
-									console.log("up: " + corner2x + ', ' + corner2y);
+									}									
 								}
 
 								//FOR UNIT SPECIFIC MOUSE EVENTS
