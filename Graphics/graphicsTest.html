@@ -35,13 +35,15 @@
 						var old_x, old_y;
 						var mouseDownEvent;
 						var mouseUpEvent;
-						var keyboardEvent = null;
+						var mouseButton = -1;
+						var keyboardEvent = null;						
 						var mouseDown=function(e) 
 						{
 							mouseUpEvent = false;
 							mouseDownEvent = true;
-							drag=true;
-							old_x=e.pageX, old_y=e.pageY;
+							mouseButton = e.button;
+							drag = true;
+							old_x = e.pageX, old_y = e.pageY;
 							e.preventDefault();
 							return false;
 						};
@@ -51,6 +53,7 @@
 							mouseUpEvent = true;
 							mouseDownEvent = false;
 							drag=false;
+							e.preventDefault();
 						};
 
 						var mouseMove=function(e) 
@@ -75,10 +78,14 @@
 						canvas.addEventListener("mousemove", mouseMove, false);
 						document.addEventListener("keydown", keyboardEvents, false);
 
+						document.addEventListener("contextmenu", function(e) {
+													e.preventDefault();
+													});
+
 						/*========================= CANVAS AND SHADERS ========================= */
 					    gl = canvas.getContext("experimental-webgl"); //
 						gl.viewport(0, 0, canvas.width, canvas.height);
-						gl.clearColor(0, 0.5, 0, 1); //drawing viewfinder color
+						gl.clearColor(0, 0, 0, 1); //drawing viewfinder color
 						gl.clear(gl.COLOR_BUFFER_BIT);
 						
 			    		var v = document.getElementById("vertex").firstChild.nodeValue;
@@ -109,46 +116,40 @@
 						//set up arrays
 						aspect = canvas.width / canvas.height;
 
-						maxUnits = 100 //temp
-						var toDraw = new DrawGroup(maxUnits, [0.0, 1.0, 0.0, 1.0]); 
-						var selected = new DrawGroup(maxUnits, [0.0, 0.3, 0.0, 1.0]); //FIXME: can't seem to color this group properly and rects in this group don't move
-						var myGroups = [toDraw, selected];
+						maxUnits = 100; //temp
+						var neutralResources = new DrawGroup(maxUnits, [1.0, 1.0, 1.0, 1.0]); 
+						var p1Owned = new DrawGroup(maxUnits, [0.0, 0.0, 1.0, 1.0]); 
+						var p2Owned = new DrawGroup(maxUnits, [1.0, 0.0, 0.0, 1.0]); 
+						var p1Selected = new DrawGroup(maxUnits, [0.52, 0.8, 0.92, 1.0]);
+						var p2Selected = new DrawGroup(maxUnits, [1.0, 0.41, 0.70, 1.0]);
+						var myGroups = [neutralResources, p1Owned, p2Owned, p1Selected, p2Selected];
 
-						// r1 = new Rectangle([0, 0], 0.125, 0.125);
-						// r2 = new Rectangle([.5, .5], 0.125, 0.125);
-						// r3 = new Rectangle([0, 0.25], 0.25, 0.25);
-						// r4 = new Rectangle([0.25, 0], 0.25, 0.25);
-
-						// t1 = new Triangle([0, 0], 0.125, 0.125);
-						// t2 = new Triangle([.5, .5], 0.125, 0.125);
-
-						// c1 = new Circle([0, 0], 0.125);
-						// c2 = new Circle([0.5, 0.5], 0.125);
-
-						// toDraw.group.push(c1);
-						// toDraw.group.push(c2);
-
-						//Unit(center, shape, owner)
 						p1 = new Player(true);
+						p1.standard = p1Owned;
+						p1.selected = p1Selected;						
 						p2 = new Player(false);
-
-						// u1 = new Unit([0, 0], "rectangle", p1);
-						// u2 = new Unit([0.5, 0.5], "triangle", p2);
-
+						p2.standard = p2Owned;
+						p2.selected = p2Selected;
+						
 						r1 = new Resource([0, 0], "rectangle");
 						r2 = new Resource([-0.5, 0], "triangle");
 						r3 = new Resource([0.5, 0], "circle");
 
-						toDraw.add(r1);
-						toDraw.add(r2);
-						toDraw.add(r3);
-						p1.spawnPaper(toDraw, toDraw);
-						p2.spawnPaper(toDraw, toDraw);
+						neutralResources.add(r1);
+						neutralResources.add(r2);
+						neutralResources.add(r3);
 
+						p1.spawnRock(p1Owned, p1Owned);
+						p1.spawnPaper(p1Owned, p1Owned);
+						p1.spawnScissors(p1Owned, p1Owned);
+						p2.spawnRock(p2Owned, p2Owned);
+						p2.spawnPaper(p2Owned, p2Owned);
+
+						var combinedGroup;
 						function update()
 						{
 							var i; var j; 
-							var combinedGroup = new DrawGroup(maxUnits, [0.0, 1.0, 0.0, 1.0])
+							combinedGroup = new DrawGroup(maxUnits * myGroups.length, [0.0, 1.0, 0.0, 1.0])
 							for(i=0; i < myGroups.length; i++)
 							{
 								for(j=0; j < myGroups[i].group.length; j++)
@@ -163,9 +164,17 @@
 								mouseDownEvent = false;	
 								for(i=0; i < combinedGroup.group.length; i++)
 								{
-									if (combinedGroup.group[i].constructor.name == "Unit")
+									if (combinedGroup.group[i].constructor.name == "Unit" && 
+										combinedGroup.group[i].owner == p1)
 									{
-										combinedGroup.group[i].mouseDown(old_x, old_y);	
+										if (mouseButton	== 0)
+										{
+											combinedGroup.group[i].mouseDown(old_x, old_y);
+										}
+										else if (mouseButton == 2)
+										{
+											combinedGroup.group[i].rightClick(old_x, old_y);
+										}
 									}
 								}
 							}
@@ -176,8 +185,7 @@
 
 							if (keyboardEvent != null)
 							{
-								console.log('kb event');
-								p1.handleEvents(keyboardEvent, toDraw, combinedGroup);
+								p1.handleEvents(keyboardEvent, p1Owned, combinedGroup);
 								keyboardEvent = null;
 							}
 
@@ -214,10 +222,12 @@
 
 						function drawLoop()
 						{
-							toDraw.clear();
-							selected.clear();
-							gl.clear(gl.COLOR_BUFFER_BIT);
 							var i; var j;
+							gl.clear(gl.COLOR_BUFFER_BIT);
+							for(i=0; i < myGroups.length; i++)
+							{
+								myGroups[i].clear();
+							}
 							for(i=0; i < myGroups.length; i++)
 							{
 								for(j=0; j < myGroups[i].group.length; j++)
@@ -233,6 +243,7 @@
 						setInterval(drawLoop, 16);
 					}
 
+					/*================== DRAW GROUP =================*/
 					function DrawGroup(maxUnits, color=[])
 					{
 						this.v = new Float32Array(maxUnits*12);
@@ -250,30 +261,43 @@
 					{
 						toAdd.dGroup = this;
 						toAdd.index = this.group.length;
-						this.group.push(toAdd); 
+						this.group.push(toAdd); 						
 					}
 
 					DrawGroup.prototype.remove = function(toRemove)
 					{
-						toRemove.dGroup = null;
-						this.group.splice(toRemove.index, toRemove.index+1);
+						var i;
+						var oldGroup = this.group;
+						this.index = 0;
+						this.group = [];
+						for(i = 0; i < oldGroup.length; i++)
+						{
+							oldGroup[i].dGroup = null;
+							if (toRemove != oldGroup[i])
+							{
+								this.add(oldGroup[i]);
+							}
+						}						
 					}
 
 					DrawGroup.prototype.render = function()
 					{
-						itemSize = 2;
-						numItems = this.v.length / itemSize;
+						if (this.group.length != 0)
+						{
+							itemSize = 2;
+							numItems = this.v.length / itemSize;
 
-						//gl
-						gl.useProgram(program);
-     
-						program.uColor = gl.getUniformLocation(program, "uColor"); //get color from program
-						gl.uniform4fv(program.uColor, this.color); //set color
-
-						program.aVertexPosition = gl.getAttribLocation(program, "aVertexPosition"); //get vertex position from program
-						gl.enableVertexAttribArray(program.aVertexPosition);
-						gl.vertexAttribPointer(program.aVertexPosition, itemSize, gl.FLOAT, false, 0, 0);
-						gl.drawArrays(gl.TRIANGLES, 0, numItems)
+							//gl
+							gl.useProgram(program);
+	     
+							program.uColor = gl.getUniformLocation(program, "uColor"); //get color from program
+							gl.uniform4fv(program.uColor, this.color); //set color
+							program.aVertexPosition = gl.getAttribLocation(program, "aVertexPosition"); //get vertex position from program
+							gl.enableVertexAttribArray(program.aVertexPosition);
+							gl.vertexAttribPointer(program.aVertexPosition, itemSize, gl.FLOAT, false, 0, 0);
+							gl.drawArrays(gl.TRIANGLES, 0, numItems);
+						}
+						
 					}
 
 					DrawGroup.prototype.clear = function()
@@ -369,13 +393,11 @@
 								}
 								else
 								{
-									console.log("huh");
-
 									var pos = [0,-0.75];
 									var toAdd = new Unit(pos, "rectangle", this);
 									while (colliders.somethingCollidesWith(toAdd))
 									{
-										pos[0] += 0.25;
+										pos[0] += 0.1;
 										toAdd = new Unit(pos, "rectangle", this);
 									}
 									drawGroup.add(toAdd);
@@ -393,7 +415,7 @@
 									var toAdd = new Unit(pos, "rectangle", this);
 									while (colliders.somethingCollidesWith(toAdd))
 									{
-										pos[0] += 0.25;
+										pos[0] += 0.1;
 										toAdd = new Unit(pos, "rectangle", this);
 									}
 									drawGroup.add(toAdd);
@@ -425,7 +447,7 @@
 									var toAdd = new Unit(pos, "circle", this);
 									while (colliders.somethingCollidesWith(toAdd))
 									{
-										pos[0] += 0.25;
+										pos[0] += 0.1;
 										toAdd = new Unit(pos, "circle", this);
 									}
 									drawGroup.add(toAdd);
@@ -443,7 +465,7 @@
 									var toAdd = new Unit(pos, "circle", this);
 									while (colliders.somethingCollidesWith(toAdd))
 									{
-										pos[0] += 0.25;
+										pos[0] += 0.1;
 										toAdd = new Unit(pos, "circle", this);
 									}
 									drawGroup.add(toAdd);
@@ -472,7 +494,7 @@
 									var toAdd = new Unit(pos, "triangle", this)
 									while (colliders.somethingCollidesWith(toAdd))
 									{
-										pos[0] += 0.25;
+										pos[0] += 0.1;
 										toAdd = new Unit(pos, "triangle", this);
 									}
 									drawGroup.add(toAdd);
@@ -490,7 +512,7 @@
 									var toAdd = new Unit(pos, "triangle", this)
 									while (colliders.somethingCollidesWith(toAdd))
 									{
-										pos[0] += 0.25;
+										pos[0] += 0.1;
 										toAdd = new Unit(pos, "triangle", this);
 									}
 									drawGroup.add(toAdd);
@@ -520,6 +542,8 @@
 					function Unit(center, shape, owner)
 					{
 						this.owner = owner; //determines whether this belongs to the player or the AI
+						this.selected = false;
+
 						this.shape = shape;
 						if(this.shape == "rectangle")
 						{
@@ -527,7 +551,7 @@
 							this.range = 1; //TODO: tune me
 							this.speed = 0.05;
 							this.attack = 1; // TODO: tune me
-							this.gObject = new Rectangle(center, 0.125, 0.125);
+							this.gObject = new Rectangle(center, 0.0625, 0.0625);
 						}
 						else if(this.shape == "triangle")
 						{
@@ -535,7 +559,7 @@
 							this.range = 1; //TODO: tune me
 							this.speed = 0.05;
 							this.attack = 1; // TODO: tune me
-							this.gObject = new Triangle(center, 0.125, 0.125);
+							this.gObject = new Triangle(center, 0.0625, 0.0625);
 						}
 						else if(this.shape == "circle")
 						{
@@ -543,7 +567,7 @@
 							this.range = 1; //TODO: tune me
 							this.speed = 0.05;
 							this.attack = 1; //TODO: tune me
-							this.gObject = new Circle(center, 0.06125);
+							this.gObject = new Circle(center, 0.03125);
 						}
 
 						this.center = this.gObject.center;
@@ -556,11 +580,45 @@
 					Unit.prototype.mouseDown = function(x, y)
 					{
 						this.gObject.mouseDown(x, y);
+						var normalX = 2 * (x / canvas.width) - 1;
+						var normalY = -2 * (y / canvas.height) + 1;
+						if (!this.selected)
+						{
+							if (this.in([normalX, normalY]))
+							{
+								this.remove();
+								this.owner.selected.add(this);
+								this.selected = true;
+								console.log("Selected");
+							} 							
+						}
+						else
+						{
+							if (this.in([normalX, normalY]))
+							{
+								this.remove();
+								this.owner.standard.add(this);
+								this.selected = false;
+								console.log("deselected");
+							} 							
+						}
+
 						this.center = this.gObject.center;
 						this.right = this.gObject.right;
 						this.left = this.gObject.left;
 						this.top = this.gObject.top;
 						this.bottom = this.gObject.bottom;
+					}
+
+					Unit.prototype.rightClick = function(x, y)
+					{
+						var normalX = 2 * (x / canvas.width) - 1;
+						var normalY = -2 * (y / canvas.height) + 1;
+						if (this.selected)
+						{
+							console.log("moving");
+							this.setDestination([normalX, normalY]);
+						}
 					}
 
 					Unit.prototype.update = function()
@@ -620,7 +678,6 @@
 						{
 							return false;
 						}
-
 					}
 
 					Unit.prototype.in = function(point)
@@ -692,6 +749,13 @@
 					Resource.prototype.claim = function(player)
 					{
 						this.player = player;
+						this.remove();
+						this.player.standard.add(this);
+					}
+
+					Resource.prototype.remove = function()
+					{
+						this.dGroup.remove(this);
 					}
 
 					Resource.prototype.update = function()
@@ -756,7 +820,6 @@
 						this.width = width;
 						this.height = height;
 						this.setPos(center, width, height);
-						this.selected = false;
 						this.speed = 0.01; //TODO: tune for different shapes and stuff
 					}
 
@@ -778,34 +841,6 @@
 
 					Rectangle.prototype.mouseDown = function(posx, posy)
 					{
-						//TODO: replace selection to changing the color of the piece
-						normalX = 2 * (posx / canvas.width) - 1;
-						normalY = -2 * (posy / canvas.height) + 1;
-						if (!this.selected)
-						{
-							if (this.in([normalX, normalY]))
-							{
-								this.selected = true;
-								console.log("Selected");
-							} 
-							else
-							{
-								console.log("Not selected");
-							}
-						}
-						else
-						{
-							if (this.in([normalX, normalY]))
-							{
-								this.selected = false;
-								console.log("deselected");
-							} 
-							else 
-							{
-								console.log("moving");
-								this.setDestination([normalX, normalY]);
-							}
-						}
 					}
 
 					Rectangle.prototype.update = function()
@@ -873,7 +908,6 @@
 						this.width = width;
 						this.height = height;
 						this.setPos(center, width, height);
-						this.selected = false;
 						this.speed = 0.01; //TODO: tune for different shapes and stuff
 					}
 
@@ -894,35 +928,7 @@
 					}
 
 					Triangle.prototype.mouseDown = function(posx, posy)
-					{
-						//TODO: replace selection to changing the color of the piece
-						normalX = 2 * (posx / canvas.width) - 1;
-						normalY = -2 * (posy / canvas.height) + 1;
-						if (!this.selected)
-						{
-							if (this.in([normalX, normalY]))
-							{
-								this.selected = true;
-								console.log("Selected");
-							} 
-							else
-							{
-								console.log("Not selected");
-							}
-						}
-						else
-						{
-							if (this.in([normalX, normalY]))
-							{
-								this.selected = false;
-								console.log("deselected");
-							} 
-							else 
-							{
-								console.log("moving");
-								this.setDestination([normalX, normalY]);
-							}
-						}
+					{						
 					}
 
 					Triangle.prototype.update = function()
@@ -1034,35 +1040,7 @@
 					}
 
 					Circle.prototype.mouseDown = function(posx, posy)
-					{
-						//TODO: replace selection to changing the color of the piece
-						normalX = 2 * (posx / canvas.width) - 1;
-						normalY = -2 * (posy / canvas.height) + 1;
-						if (!this.selected)
-						{
-							if (this.in([normalX, normalY]))
-							{
-								this.selected = true;
-								console.log("Selected");
-							} 
-							else
-							{
-								console.log("Not selected");
-							}
-						}
-						else
-						{
-							if (this.in([normalX, normalY]))
-							{
-								this.selected = false;
-								console.log("deselected");
-							} 
-							else 
-							{
-								console.log("moving");
-								this.setDestination([normalX, normalY]);
-							}
-						}
+					{						
 					}
 
 					Circle.prototype.update = function()
