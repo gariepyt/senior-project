@@ -42,7 +42,7 @@
 						var timeoutHandle; 
 
 						var clickLength = function()
-						{							
+						{
 							shortClick=false;
 						};
 
@@ -180,7 +180,6 @@
 								mouseUpEvent = false;
 								if (!shortClick)
 								{
-									//TODO: Clear all selected stuff
 									shortClick = true;
 									var corner1x = 2 * (up_x / canvas.width) - 1;
 									var corner1y = -2 * (up_y / canvas.height) + 1;
@@ -207,12 +206,11 @@
 										var centery = height / 2 + corner2y;
 									}
 
-									var selectAllRect = new Rectangle([centerx, centery], width, height)
+									var selectAllRect = new Rectangle([centerx, centery], width, height);
 									var topRight = [selectAllRect.right, selectAllRect.top]; 
 									var topLeft = [selectAllRect.left, selectAllRect.top];
 									var bottomRight = [selectAllRect.right, selectAllRect.bottom];
 									var bottomLeft = [selectAllRect.left, selectAllRect.bottom];
-									var i;
 									for(i = 0; i < combinedGroup.group.length; i++)
 									{
 										var iTopRight = [combinedGroup.group[i].right, combinedGroup.group[i].top]; 
@@ -230,23 +228,35 @@
 										}
 									}									
 								}
-
-								//FOR UNIT SPECIFIC MOUSE EVENTS
-								for(i=0; i < combinedGroup.group.length; i++)
+								else
 								{
-									if (combinedGroup.group[i].constructor.name == "Unit" && 
-										combinedGroup.group[i].owner == p1)
+									//FOR UNIT SPECIFIC MOUSE EVENTS
+									var clickedSomeEntity = false;
+									for(i=0; i < combinedGroup.group.length; i++)
 									{
-										if (mouseButton	== 0)
+										if (combinedGroup.group[i].constructor.name == "Unit" && 
+											combinedGroup.group[i].owner == p1)
 										{
-											if (shortClick)
+											if (mouseButton	== 0)
 											{
-												combinedGroup.group[i].click(old_x, old_y);	
-											}											
+												if (combinedGroup.group[i].click(old_x, old_y))
+												{
+													clickedSomeEntity = true;
+												}
+											}
+											else if (mouseButton == 2)
+											{
+												combinedGroup.group[i].rightClick(old_x, old_y);
+											}
 										}
-										else if (mouseButton == 2)
+									}
+									if (!clickedSomeEntity && shortClick && mouseButton == 0)
+									{
+										//need conditional for checking nothing was clicked
+										while (p1Selected.group.length > 0)
 										{
-											combinedGroup.group[i].rightClick(old_x, old_y);
+											var temp = p1Selected.group[0];
+											temp.deselect();
 										}
 									}
 								}
@@ -254,6 +264,31 @@
 							else if (mouseDownEvent && !shortClick)
 							{
 								console.log("Mouse is being held down...consider drawing the click and drag rect");
+								// var corner1x = 2 * (old_x / canvas.width) - 1;
+								// var corner1y = -2 * (old_y / canvas.height) + 1;
+								// var corner2x = 2 * (down_x / canvas.width) - 1;
+								// var corner2y = -2 * (down_y / canvas.height) + 1;
+								// if (corner2x > corner1x)
+								// {
+								// 	var width = corner2x - corner1x;
+								// 	var centerx = width / 2 + corner1x;
+								// }
+								// else
+								// {
+								// 	var width = corner1x - corner2x;
+								// 	var centerx = width / 2 + corner2x;
+								// }
+								// if (corner2y > corner1y)
+								// {
+								// 	var height = corner2y - corner1y;
+								// 	var centery =  height / 2 + corner1y;
+								// }
+								// else
+								// {
+								// 	var height = corner1y - corner2y;
+								// 	var centery = height / 2 + corner2y;
+								// }
+								// var selectingRect = new Rectangle([centerx, centery], width, height);
 							}
 
 							if (keyboardEvent != null)
@@ -670,27 +705,30 @@
 					{
 						this.gObject.click(x, y);
 						var normalX = 2 * (x / canvas.width) - 1;
-						var normalY = -2 * (y / canvas.height) + 1;
-						if (!this.selected)
-						{
-							if (this.in([normalX, normalY]))
-							{
-								this.select();
-							} 							
-						}
-						else
-						{
-							if (this.in([normalX, normalY]))
-							{
-								this.deselect();
-							} 							
-						}
+						var normalY = -2 * (y / canvas.height) + 1;						
 
 						this.center = this.gObject.center;
 						this.right = this.gObject.right;
 						this.left = this.gObject.left;
 						this.top = this.gObject.top;
 						this.bottom = this.gObject.bottom;
+						if (!this.selected)
+						{
+							if (this.in([normalX, normalY]))
+							{
+								this.select();
+								return true;
+							} 					
+						}
+						else
+						{
+							if (this.in([normalX, normalY]))
+							{
+								this.deselect();
+								return true;
+							} 							
+						}
+						return false;
 					}
 
 					Unit.prototype.rightClick = function(x, y)
