@@ -118,37 +118,19 @@
 
 						maxUnits = 100; //temp
 						var neutralResources = new DrawGroup(maxUnits, [1.0, 1.0, 1.0, 1.0]); 
-						var p1Owned = new DrawGroup(maxUnits, [0.0, 0.0, 1.0, 1.0]);
+						var p1Owned = new DrawGroup(maxUnits, [0.0, 0.0, 1.0, 1.0]); 
 						var p2Owned = new DrawGroup(maxUnits, [1.0, 0.0, 0.0, 1.0]); 
 						var p1Selected = new DrawGroup(maxUnits, [0.52, 0.8, 0.92, 1.0]);
 						var p2Selected = new DrawGroup(maxUnits, [1.0, 0.41, 0.70, 1.0]);
 						var myGroups = [neutralResources, p1Owned, p2Owned, p1Selected, p2Selected];
 
-						// r1 = new Rectangle([0, 0], 0.125, 0.125);
-						// r2 = new Rectangle([.5, .5], 0.125, 0.125);
-						// r3 = new Rectangle([0, 0.25], 0.25, 0.25);
-						// r4 = new Rectangle([0.25, 0], 0.25, 0.25);
-
-						// t1 = new Triangle([0, 0], 0.125, 0.125);
-						// t2 = new Triangle([.5, .5], 0.125, 0.125);
-
-						// c1 = new Circle([0, 0], 0.125);
-						// c2 = new Circle([0.5, 0.5], 0.125);
-
-						// resources.group.push(c1);
-						// resources.group.push(c2);
-
-						//Unit(center, shape, owner)
 						p1 = new Player(true);
 						p1.standard = p1Owned;
 						p1.selected = p1Selected;						
 						p2 = new Player(false);
 						p2.standard = p2Owned;
 						p2.selected = p2Selected;
-
-						u1 = new Unit([0, 0], "rectangle", p1);
-						u2 = new Unit([0.5, 0.5], "triangle", p2);
-
+						
 						r1 = new Resource([0, 0], "rectangle");
 						r2 = new Resource([-0.5, 0], "triangle");
 						r3 = new Resource([0.5, 0], "circle");
@@ -159,6 +141,7 @@
 
 						p1.spawnRock(p1Owned, p1Owned);
 						p1.spawnPaper(p1Owned, p1Owned);
+						p1.spawnScissors(p1Owned, p1Owned);
 						p2.spawnRock(p2Owned, p2Owned);
 						p2.spawnPaper(p2Owned, p2Owned);
 
@@ -284,8 +267,19 @@
 					DrawGroup.prototype.remove = function(toRemove)
 					{
 						console.log("Remove called");
-						toRemove.dGroup = null;
-						this.group.splice(toRemove.index, toRemove.index+1);
+						
+						var i;
+						var oldGroup = this.group;
+						this.index = 0;
+						this.group = [];
+						for(i = 0; i < oldGroup.length; i++)
+						{
+							oldGroup[i].dGroup = null;
+							if (toRemove != oldGroup[i])
+							{
+								this.add(oldGroup[i]);
+							}
+						}						
 					}
 
 					DrawGroup.prototype.render = function()
@@ -303,7 +297,7 @@
 							program.aVertexPosition = gl.getAttribLocation(program, "aVertexPosition"); //get vertex position from program
 							gl.enableVertexAttribArray(program.aVertexPosition);
 							gl.vertexAttribPointer(program.aVertexPosition, itemSize, gl.FLOAT, false, 0, 0);
-							gl.drawArrays(gl.TRIANGLES, 0, numItems)
+							gl.drawArrays(gl.TRIANGLES, 0, numItems);
 						}
 						
 					}
@@ -405,7 +399,7 @@
 									var toAdd = new Unit(pos, "rectangle", this);
 									while (colliders.somethingCollidesWith(toAdd))
 									{
-										pos[0] += 0.25;
+										pos[0] += 0.1;
 										toAdd = new Unit(pos, "rectangle", this);
 									}
 									drawGroup.add(toAdd);
@@ -423,7 +417,7 @@
 									var toAdd = new Unit(pos, "rectangle", this);
 									while (colliders.somethingCollidesWith(toAdd))
 									{
-										pos[0] += 0.25;
+										pos[0] += 0.1;
 										toAdd = new Unit(pos, "rectangle", this);
 									}
 									drawGroup.add(toAdd);
@@ -455,7 +449,7 @@
 									var toAdd = new Unit(pos, "circle", this);
 									while (colliders.somethingCollidesWith(toAdd))
 									{
-										pos[0] += 0.25;
+										pos[0] += 0.1;
 										toAdd = new Unit(pos, "circle", this);
 									}
 									drawGroup.add(toAdd);
@@ -473,7 +467,7 @@
 									var toAdd = new Unit(pos, "circle", this);
 									while (colliders.somethingCollidesWith(toAdd))
 									{
-										pos[0] += 0.25;
+										pos[0] += 0.1;
 										toAdd = new Unit(pos, "circle", this);
 									}
 									drawGroup.add(toAdd);
@@ -502,7 +496,7 @@
 									var toAdd = new Unit(pos, "triangle", this)
 									while (colliders.somethingCollidesWith(toAdd))
 									{
-										pos[0] += 0.25;
+										pos[0] += 0.1;
 										toAdd = new Unit(pos, "triangle", this);
 									}
 									drawGroup.add(toAdd);
@@ -520,7 +514,7 @@
 									var toAdd = new Unit(pos, "triangle", this)
 									while (colliders.somethingCollidesWith(toAdd))
 									{
-										pos[0] += 0.25;
+										pos[0] += 0.1;
 										toAdd = new Unit(pos, "triangle", this);
 									}
 									drawGroup.add(toAdd);
@@ -559,7 +553,7 @@
 							this.range = 1; //TODO: tune me
 							this.speed = 0.05;
 							this.attack = 1; // TODO: tune me
-							this.gObject = new Rectangle(center, 0.125, 0.125);
+							this.gObject = new Rectangle(center, 0.0625, 0.0625);
 						}
 						else if(this.shape == "triangle")
 						{
@@ -567,7 +561,7 @@
 							this.range = 1; //TODO: tune me
 							this.speed = 0.05;
 							this.attack = 1; // TODO: tune me
-							this.gObject = new Triangle(center, 0.125, 0.125);
+							this.gObject = new Triangle(center, 0.0625, 0.0625);
 						}
 						else if(this.shape == "circle")
 						{
@@ -575,7 +569,7 @@
 							this.range = 1; //TODO: tune me
 							this.speed = 0.05;
 							this.attack = 1; //TODO: tune me
-							this.gObject = new Circle(center, 0.06125);
+							this.gObject = new Circle(center, 0.03125);
 						}
 
 						this.center = this.gObject.center;
