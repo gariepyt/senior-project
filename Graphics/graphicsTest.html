@@ -253,9 +253,10 @@
 									if (!clickedSomeEntity && shortClick && mouseButton == 0)
 									{
 										//need conditional for checking nothing was clicked
+										var temp;
 										while (p1Selected.group.length > 0)
 										{
-											var temp = p1Selected.group[0];
+											temp = p1Selected.group[0];
 											temp.deselect();
 										}
 									}
