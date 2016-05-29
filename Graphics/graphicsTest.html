@@ -132,6 +132,8 @@
 						aspect = canvas.width / canvas.height;
 
 						maxUnits = 100; //temp
+						var innerSelectionBox = new DrawGroup(10, [0, 0, 0, 1.0]);
+						var outerSelectionBox = new DrawGroup(10, [1.0, 1.0, 1.0, 1.0]);
 						var neutralResources = new DrawGroup(maxUnits, [1.0, 1.0, 1.0, 1.0]); 
 						var p1Owned = new DrawGroup(maxUnits, [0.0, 0.0, 1.0, 1.0]); 
 						var p2Owned = new DrawGroup(maxUnits, [1.0, 0.0, 0.0, 1.0]); 
@@ -149,6 +151,8 @@
 						r1 = new Resource([0, 0], "rectangle");
 						r2 = new Resource([-0.5, 0], "triangle");
 						r3 = new Resource([0.5, 0], "circle");
+
+						// outerSelectionBox.add(new Rectangle([-.25, -.25], .03, .03));
 
 						neutralResources.add(r1);
 						neutralResources.add(r2);
@@ -265,31 +269,44 @@
 							else if (mouseDownEvent && !shortClick)
 							{
 								console.log("Mouse is being held down...consider drawing the click and drag rect");
-								// var corner1x = 2 * (old_x / canvas.width) - 1;
-								// var corner1y = -2 * (old_y / canvas.height) + 1;
-								// var corner2x = 2 * (down_x / canvas.width) - 1;
-								// var corner2y = -2 * (down_y / canvas.height) + 1;
-								// if (corner2x > corner1x)
-								// {
-								// 	var width = corner2x - corner1x;
-								// 	var centerx = width / 2 + corner1x;
-								// }
-								// else
-								// {
-								// 	var width = corner1x - corner2x;
-								// 	var centerx = width / 2 + corner2x;
-								// }
-								// if (corner2y > corner1y)
-								// {
-								// 	var height = corner2y - corner1y;
-								// 	var centery =  height / 2 + corner1y;
-								// }
-								// else
-								// {
-								// 	var height = corner1y - corner2y;
-								// 	var centery = height / 2 + corner2y;
-								// }
-								// var selectingRect = new Rectangle([centerx, centery], width, height);
+								var corner1x = 2 * (old_x / canvas.width) - 1;
+								var corner1y = -2 * (old_y / canvas.height) + 1;
+								var corner2x = 2 * (down_x / canvas.width) - 1;
+								var corner2y = -2 * (down_y / canvas.height) + 1;
+								if (corner2x > corner1x)
+								{
+									var width = corner2x - corner1x;
+									var centerx = width / 2 + corner1x;
+								}
+								else
+								{
+									var width = corner1x - corner2x;
+									var centerx = width / 2 + corner2x;
+								}
+								if (corner2y > corner1y)
+								{
+									var height = corner2y - corner1y;
+									var centery =  height / 2 + corner1y;
+								}
+								else
+								{
+									var height = corner1y - corner2y;
+									var centery = height / 2 + corner2y;
+								}
+								
+								if (innerSelectionBox.group.length > 0)
+								{
+									innerSelectionBox.remove(innerSelectionBox.group[0]);
+								}
+								if (outerSelectionBox.group.length > 0)
+								{
+									outerSelectionBox.remove(outerSelectionBox.group[0]);
+								}
+								
+								var innerSelectingRect = new Rectangle([centerx, centery], width, height);
+								var outerSelectingRect = new Rectangle([centerx, centery], width + 0.001, height + 0.001);
+								innerSelectionBox.add(innerSelectingRect);
+								outerSelectionBox.add(outerSelectingRect);
 							}
 
 							if (keyboardEvent != null)
@@ -332,11 +349,25 @@
 						function drawLoop()
 						{
 							var i; var j;
-							gl.clear(gl.COLOR_BUFFER_BIT);
+							gl.clear(gl.COLOR_BUFFER_BIT);							
 							for(i=0; i < myGroups.length; i++)
 							{
 								myGroups[i].clear();
 							}
+							outerSelectionBox.clear();
+							innerSelectionBox.clear();
+
+							for(j=0; j < outerSelectionBox.group.length; j++)
+							{
+								outerSelectionBox.group[j].draw(outerSelectionBox);
+							}
+							outerSelectionBox.render();
+							for(j=0; j < innerSelectionBox.group.length; j++)
+							{
+								innerSelectionBox.group[j].draw(innerSelectionBox);
+							}
+							innerSelectionBox.render();
+							
 							for(i=0; i < myGroups.length; i++)
 							{
 								for(j=0; j < myGroups[i].group.length; j++)
@@ -344,7 +375,7 @@
 									myGroups[i].group[j].draw(myGroups[i]);
 								}
 								myGroups[i].render();
-							}
+							}														
 						}
 
 						setInterval(update, 1);
