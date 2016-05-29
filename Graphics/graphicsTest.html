@@ -36,7 +36,16 @@
 						var mouseDownEvent;
 						var mouseUpEvent;
 						var mouseButton = -1;
-						var keyboardEvent = null;						
+						var keyboardEvent = null;
+						var shortClick = true;
+						var timeoutHandle; 
+
+						var clickLength = function()
+						{
+							console.log("firing timeout"); 
+							shortClick=false;
+						};
+
 						var mouseDown=function(e) 
 						{
 							mouseUpEvent = false;
@@ -44,12 +53,15 @@
 							mouseButton = e.button;
 							drag = true;
 							old_x = e.pageX, old_y = e.pageY;
+
+							timeoutHandle = setTimeout(clickLength, 300);
 							e.preventDefault();
 							return false;
 						};
 
 						var mouseUp=function(e)
 						{
+							clearTimeout(timeoutHandle);
 							mouseUpEvent = true;
 							mouseDownEvent = false;
 							drag=false;
@@ -159,9 +171,9 @@
 							}
 
 							/*========================== USER EVENTS ==================================*/
-							if (mouseDownEvent)
+							if (mouseUpEvent)
 							{
-								mouseDownEvent = false;	
+								mouseUpEvent = false;
 								for(i=0; i < combinedGroup.group.length; i++)
 								{
 									if (combinedGroup.group[i].constructor.name == "Unit" && 
@@ -169,7 +181,15 @@
 									{
 										if (mouseButton	== 0)
 										{
-											combinedGroup.group[i].mouseDown(old_x, old_y);
+											if (shortClick)
+											{
+												combinedGroup.group[i].click(old_x, old_y);	
+											}
+											else
+											{
+												shortClick = true;
+												console.log("Long click");
+											}
 										}
 										else if (mouseButton == 2)
 										{
@@ -177,10 +197,6 @@
 										}
 									}
 								}
-							}
-							else if (mouseUpEvent)
-							{
-								mouseUpEvent = false;
 							}
 
 							if (keyboardEvent != null)
@@ -577,9 +593,9 @@
 						this.bottom = this.gObject.bottom;
 					}
 
-					Unit.prototype.mouseDown = function(x, y)
+					Unit.prototype.click = function(x, y)
 					{
-						this.gObject.mouseDown(x, y);
+						this.gObject.click(x, y);
 						var normalX = 2 * (x / canvas.width) - 1;
 						var normalY = -2 * (y / canvas.height) + 1;
 						if (!this.selected)
@@ -803,9 +819,9 @@
 						}
 					}
 
-					Resource.prototype.mouseDown = function(x, y)
+					Resource.prototype.click = function(x, y)
 					{
-						this.gObject.mouseDown(x, y);
+						this.gObject.click(x, y);
 					}
 
 					/*======================================================== BASE CLASS ======================================================= */
@@ -839,7 +855,7 @@
 						toDraw.index += this.screenPos.length;
 					}
 
-					Rectangle.prototype.mouseDown = function(posx, posy)
+					Rectangle.prototype.click = function(posx, posy)
 					{
 					}
 
@@ -927,7 +943,7 @@
 						toDraw.index += this.screenPos.length;
 					}
 
-					Triangle.prototype.mouseDown = function(posx, posy)
+					Triangle.prototype.click = function(posx, posy)
 					{						
 					}
 
@@ -1039,7 +1055,7 @@
 						toDraw.index += this.screenPos.length;
 					}
 
-					Circle.prototype.mouseDown = function(posx, posy)
+					Circle.prototype.click = function(posx, posy)
 					{						
 					}
 
