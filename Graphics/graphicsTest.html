@@ -35,13 +35,15 @@
 						var old_x, old_y;
 						var mouseDownEvent;
 						var mouseUpEvent;
-						var keyboardEvent = null;
+						var mouseButton = -1;
+						var keyboardEvent = null;						
 						var mouseDown=function(e) 
 						{
 							mouseUpEvent = false;
 							mouseDownEvent = true;
-							drag=true;
-							old_x=e.pageX, old_y=e.pageY;
+							mouseButton = e.button;
+							drag = true;
+							old_x = e.pageX, old_y = e.pageY;
 							e.preventDefault();
 							return false;
 						};
@@ -51,6 +53,7 @@
 							mouseUpEvent = true;
 							mouseDownEvent = false;
 							drag=false;
+							e.preventDefault();
 						};
 
 						var mouseMove=function(e) 
@@ -74,6 +77,10 @@
 						canvas.addEventListener("mouseout", mouseUp, false);
 						canvas.addEventListener("mousemove", mouseMove, false);
 						document.addEventListener("keydown", keyboardEvents, false);
+
+						document.addEventListener("contextmenu", function(e) {
+													e.preventDefault();
+													});
 
 						/*========================= CANVAS AND SHADERS ========================= */
 					    gl = canvas.getContext("experimental-webgl"); //
@@ -109,7 +116,7 @@
 						//set up arrays
 						aspect = canvas.width / canvas.height;
 
-						maxUnits = 50; //temp
+						maxUnits = 100; //temp
 						var neutralResources = new DrawGroup(maxUnits, [1.0, 1.0, 1.0, 1.0]); 
 						var p1Owned = new DrawGroup(maxUnits, [0.0, 0.0, 1.0, 1.0]);
 						var p2Owned = new DrawGroup(maxUnits, [1.0, 0.0, 0.0, 1.0]); 
@@ -177,7 +184,14 @@
 									if (combinedGroup.group[i].constructor.name == "Unit" && 
 										combinedGroup.group[i].owner == p1)
 									{
-										combinedGroup.group[i].mouseDown(old_x, old_y);	
+										if (mouseButton	== 0)
+										{
+											combinedGroup.group[i].mouseDown(old_x, old_y);
+										}
+										else if (mouseButton == 2)
+										{
+											combinedGroup.group[i].rightClick(old_x, old_y);
+										}
 									}
 								}
 							}
@@ -574,6 +588,8 @@
 					Unit.prototype.mouseDown = function(x, y)
 					{
 						this.gObject.mouseDown(x, y);
+						var normalX = 2 * (x / canvas.width) - 1;
+						var normalY = -2 * (y / canvas.height) + 1;
 						if (!this.selected)
 						{
 							if (this.in([normalX, normalY]))
@@ -582,11 +598,7 @@
 								this.owner.selected.add(this);
 								this.selected = true;
 								console.log("Selected");
-							} 
-							else
-							{
-								console.log("Not selected");
-							}
+							} 							
 						}
 						else
 						{
@@ -596,12 +608,7 @@
 								this.owner.standard.add(this);
 								this.selected = false;
 								console.log("deselected");
-							} 
-							else 
-							{
-								console.log("moving");
-								this.setDestination([normalX, normalY]);
-							}
+							} 							
 						}
 
 						this.center = this.gObject.center;
@@ -609,6 +616,17 @@
 						this.left = this.gObject.left;
 						this.top = this.gObject.top;
 						this.bottom = this.gObject.bottom;
+					}
+
+					Unit.prototype.rightClick = function(x, y)
+					{
+						var normalX = 2 * (x / canvas.width) - 1;
+						var normalY = -2 * (y / canvas.height) + 1;
+						if (this.selected)
+						{
+							console.log("moving");
+							this.setDestination([normalX, normalY]);
+						}
 					}
 
 					Unit.prototype.update = function()
@@ -739,6 +757,13 @@
 					Resource.prototype.claim = function(player)
 					{
 						this.player = player;
+						this.remove();
+						this.player.standard.add(this);
+					}
+
+					Resource.prototype.remove = function()
+					{
+						this.dGroup.remove(this);
 					}
 
 					Resource.prototype.update = function()
@@ -824,10 +849,6 @@
 
 					Rectangle.prototype.mouseDown = function(posx, posy)
 					{
-						//TODO: replace selection to changing the color of the piece
-						normalX = 2 * (posx / canvas.width) - 1;
-						normalY = -2 * (posy / canvas.height) + 1;
-						
 					}
 
 					Rectangle.prototype.update = function()
@@ -915,10 +936,7 @@
 					}
 
 					Triangle.prototype.mouseDown = function(posx, posy)
-					{
-						//TODO: replace selection to changing the color of the piece
-						normalX = 2 * (posx / canvas.width) - 1;
-						normalY = -2 * (posy / canvas.height) + 1;						
+					{						
 					}
 
 					Triangle.prototype.update = function()
@@ -1030,10 +1048,7 @@
 					}
 
 					Circle.prototype.mouseDown = function(posx, posy)
-					{
-						//TODO: replace selection to changing the color of the piece
-						normalX = 2 * (posx / canvas.width) - 1;
-						normalY = -2 * (posy / canvas.height) + 1;						
+					{						
 					}
 
 					Circle.prototype.update = function()
