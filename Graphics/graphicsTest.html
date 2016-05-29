@@ -33,6 +33,7 @@
 						/*========================= CAPTURE MOUSE EVENTS ========================= */
 						var drag=false;
 						var old_x, old_y;
+						var down_x, down_y, up_x, up_y;
 						var mouseDownEvent;
 						var mouseUpEvent;
 						var mouseButton = -1;
@@ -41,8 +42,7 @@
 						var timeoutHandle; 
 
 						var clickLength = function()
-						{
-							console.log("firing timeout"); 
+						{							
 							shortClick=false;
 						};
 
@@ -51,9 +51,10 @@
 							mouseUpEvent = false;
 							mouseDownEvent = true;
 							mouseButton = e.button;
-							drag = true;
+							drag = true;							
 							old_x = e.pageX, old_y = e.pageY;
-
+							down_x = old_x;
+							down_y = old_y;
 							timeoutHandle = setTimeout(clickLength, 300);
 							e.preventDefault();
 							return false;
@@ -61,6 +62,8 @@
 
 						var mouseUp=function(e)
 						{
+							up_x = e.pageX;
+							up_y = e.pageY;
 							clearTimeout(timeoutHandle);
 							mouseUpEvent = true;
 							mouseDownEvent = false;
@@ -188,7 +191,8 @@
 											else
 											{
 												shortClick = true;
-												console.log("Long click");
+												// console.log("old: " + down_x + ', ' + down_y);
+												// console.log("up: " + up_x + ', ' + up_y);
 											}
 										}
 										else if (mouseButton == 2)
