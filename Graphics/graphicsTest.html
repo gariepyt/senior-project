@@ -33,23 +33,38 @@
 						/*========================= CAPTURE MOUSE EVENTS ========================= */
 						var drag=false;
 						var old_x, old_y;
+						var down_x, down_y, up_x, up_y;
 						var mouseDownEvent;
 						var mouseUpEvent;
 						var mouseButton = -1;
-						var keyboardEvent = null;						
+						var keyboardEvent = null;
+						var shortClick = true;
+						var timeoutHandle; 
+
+						var clickLength = function()
+						{
+							shortClick=false;
+						};
+
 						var mouseDown=function(e) 
 						{
 							mouseUpEvent = false;
 							mouseDownEvent = true;
 							mouseButton = e.button;
-							drag = true;
+							drag = true;							
 							old_x = e.pageX, old_y = e.pageY;
+							down_x = old_x;
+							down_y = old_y;
+							timeoutHandle = setTimeout(clickLength, 300);
 							e.preventDefault();
 							return false;
 						};
 
 						var mouseUp=function(e)
 						{
+							up_x = e.pageX;
+							up_y = e.pageY;
+							clearTimeout(timeoutHandle);
 							mouseUpEvent = true;
 							mouseDownEvent = false;
 							drag=false;
@@ -117,6 +132,8 @@
 						aspect = canvas.width / canvas.height;
 
 						maxUnits = 100; //temp
+						var innerSelectionBox = new DrawGroup(10, [0, 0, 0, 1.0]);
+						var outerSelectionBox = new DrawGroup(10, [1.0, 1.0, 1.0, 1.0]);
 						var neutralResources = new DrawGroup(maxUnits, [1.0, 1.0, 1.0, 1.0]); 
 						var p1Owned = new DrawGroup(maxUnits, [0.0, 0.0, 1.0, 1.0]); 
 						var p2Owned = new DrawGroup(maxUnits, [1.0, 0.0, 0.0, 1.0]); 
@@ -134,6 +151,8 @@
 						r1 = new Resource([0, 0], "rectangle");
 						r2 = new Resource([-0.5, 0], "triangle");
 						r3 = new Resource([0.5, 0], "circle");
+
+						// outerSelectionBox.add(new Rectangle([-.25, -.25], .03, .03));
 
 						neutralResources.add(r1);
 						neutralResources.add(r2);
@@ -159,28 +178,146 @@
 							}
 
 							/*========================== USER EVENTS ==================================*/
-							if (mouseDownEvent)
+							if (mouseUpEvent)
 							{
-								mouseDownEvent = false;	
-								for(i=0; i < combinedGroup.group.length; i++)
+								mouseDownEvent = false;
+								mouseUpEvent = false;
+								if (!shortClick)
 								{
-									if (combinedGroup.group[i].constructor.name == "Unit" && 
-										combinedGroup.group[i].owner == p1)
+									if (innerSelectionBox.group.length > 0)
 									{
-										if (mouseButton	== 0)
+										innerSelectionBox.remove(innerSelectionBox.group[0]);
+									}
+									if (outerSelectionBox.group.length > 0)
+									{
+										outerSelectionBox.remove(outerSelectionBox.group[0]);
+									}
+
+									shortClick = true;
+									var corner1x = 2 * (up_x / canvas.width) - 1;
+									var corner1y = -2 * (up_y / canvas.height) + 1;
+									var corner2x = 2 * (down_x / canvas.width) - 1;
+									var corner2y = -2 * (down_y / canvas.height) + 1;
+									if (corner2x > corner1x)
+									{
+										var width = corner2x - corner1x;
+										var centerx = width / 2 + corner1x;
+									}
+									else
+									{
+										var width = corner1x - corner2x;
+										var centerx = width / 2 + corner2x;
+									}
+									if (corner2y > corner1y)
+									{
+										var height = corner2y - corner1y;
+										var centery =  height / 2 + corner1y;
+									}
+									else
+									{
+										var height = corner1y - corner2y;
+										var centery = height / 2 + corner2y;
+									}
+
+									var selectAllRect = new Rectangle([centerx, centery], width, height);
+									var topRight = [selectAllRect.right, selectAllRect.top]; 
+									var topLeft = [selectAllRect.left, selectAllRect.top];
+									var bottomRight = [selectAllRect.right, selectAllRect.bottom];
+									var bottomLeft = [selectAllRect.left, selectAllRect.bottom];
+									for(i = 0; i < combinedGroup.group.length; i++)
+									{
+										if (combinedGroup.group[i].constructor.name == 'Unit' && combinedGroup.group[i].owner == p1)
 										{
-											combinedGroup.group[i].mouseDown(old_x, old_y);
+											var iTopRight = [combinedGroup.group[i].right, combinedGroup.group[i].top]; 
+											var iTopLeft = [combinedGroup.group[i].left, combinedGroup.group[i].top];
+											var iBottomRight = [combinedGroup.group[i].right, combinedGroup.group[i].bottom];
+											var iBottomLeft = [combinedGroup.group[i].left, combinedGroup.group[i].bottom];
+											if(combinedGroup.group[i].in(topRight) || combinedGroup.group[i].in(topLeft) ||
+												combinedGroup.group[i].in(bottomRight) || combinedGroup.group[i].in(bottomLeft) ||
+												combinedGroup.group[i].in(selectAllRect.center) ||
+												selectAllRect.in(iTopRight) || selectAllRect.in(iTopLeft) || 
+												selectAllRect.in(iBottomRight) || selectAllRect.in(iBottomLeft) ||
+												selectAllRect.in(combinedGroup.group[i].center))
+											{
+												combinedGroup.group[i].select();
+											}
 										}
-										else if (mouseButton == 2)
+									}									
+								}
+								else
+								{
+									//FOR UNIT SPECIFIC MOUSE EVENTS
+									var clickedSomeEntity = false;
+									for(i=0; i < combinedGroup.group.length; i++)
+									{
+										if (combinedGroup.group[i].constructor.name == "Unit" && 
+											combinedGroup.group[i].owner == p1)
 										{
-											combinedGroup.group[i].rightClick(old_x, old_y);
+											if (mouseButton	== 0)
+											{
+												if (combinedGroup.group[i].click(old_x, old_y))
+												{
+													clickedSomeEntity = true;
+												}
+											}
+											else if (mouseButton == 2)
+											{
+												combinedGroup.group[i].rightClick(old_x, old_y);
+											}
+										}
+									}
+									if (!clickedSomeEntity && shortClick && mouseButton == 0)
+									{
+										//need conditional for checking nothing was clicked
+										var temp;
+										while (p1Selected.group.length > 0)
+										{
+											temp = p1Selected.group[0];
+											temp.deselect();
 										}
 									}
 								}
 							}
-							else if (mouseUpEvent)
+							else if (mouseDownEvent && !shortClick)
 							{
-								mouseUpEvent = false;
+								var corner1x = 2 * (old_x / canvas.width) - 1;
+								var corner1y = -2 * (old_y / canvas.height) + 1;
+								var corner2x = 2 * (down_x / canvas.width) - 1;
+								var corner2y = -2 * (down_y / canvas.height) + 1;
+								if (corner2x > corner1x)
+								{
+									var width = corner2x - corner1x;
+									var centerx = width / 2 + corner1x;
+								}
+								else
+								{
+									var width = corner1x - corner2x;
+									var centerx = width / 2 + corner2x;
+								}
+								if (corner2y > corner1y)
+								{
+									var height = corner2y - corner1y;
+									var centery =  height / 2 + corner1y;
+								}
+								else
+								{
+									var height = corner1y - corner2y;
+									var centery = height / 2 + corner2y;
+								}
+								
+								if (innerSelectionBox.group.length > 0)
+								{
+									innerSelectionBox.remove(innerSelectionBox.group[0]);
+								}
+								if (outerSelectionBox.group.length > 0)
+								{
+									outerSelectionBox.remove(outerSelectionBox.group[0]);
+								}
+								
+								var innerSelectingRect = new Rectangle([centerx, centery], width, height);
+								var outerSelectingRect = new Rectangle([centerx, centery], width + 0.001, height + 0.001);
+								innerSelectionBox.add(innerSelectingRect);
+								outerSelectionBox.add(outerSelectingRect);
 							}
 
 							if (keyboardEvent != null)
@@ -223,11 +360,25 @@
 						function drawLoop()
 						{
 							var i; var j;
-							gl.clear(gl.COLOR_BUFFER_BIT);
+							gl.clear(gl.COLOR_BUFFER_BIT);							
 							for(i=0; i < myGroups.length; i++)
 							{
 								myGroups[i].clear();
 							}
+							outerSelectionBox.clear();
+							innerSelectionBox.clear();
+
+							for(j=0; j < outerSelectionBox.group.length; j++)
+							{
+								outerSelectionBox.group[j].draw(outerSelectionBox);
+							}
+							outerSelectionBox.render();
+							for(j=0; j < innerSelectionBox.group.length; j++)
+							{
+								innerSelectionBox.group[j].draw(innerSelectionBox);
+							}
+							innerSelectionBox.render();
+
 							for(i=0; i < myGroups.length; i++)
 							{
 								for(j=0; j < myGroups[i].group.length; j++)
@@ -235,7 +386,7 @@
 									myGroups[i].group[j].draw(myGroups[i]);
 								}
 								myGroups[i].render();
-							}
+							}														
 						}
 
 						setInterval(update, 1);
@@ -577,37 +728,50 @@
 						this.bottom = this.gObject.bottom;
 					}
 
-					Unit.prototype.mouseDown = function(x, y)
+					Unit.prototype.select = function()
 					{
-						this.gObject.mouseDown(x, y);
+						this.remove();
+						this.owner.selected.add(this);
+						this.selected = true;
+						console.log("Selected");
+					}
+
+					Unit.prototype.deselect = function()
+					{
+						this.remove();
+						this.owner.standard.add(this);
+						this.selected = false;
+						console.log("deselected");
+					}
+
+					Unit.prototype.click = function(x, y)
+					{
+						this.gObject.click(x, y);
 						var normalX = 2 * (x / canvas.width) - 1;
-						var normalY = -2 * (y / canvas.height) + 1;
-						if (!this.selected)
-						{
-							if (this.in([normalX, normalY]))
-							{
-								this.remove();
-								this.owner.selected.add(this);
-								this.selected = true;
-								console.log("Selected");
-							} 							
-						}
-						else
-						{
-							if (this.in([normalX, normalY]))
-							{
-								this.remove();
-								this.owner.standard.add(this);
-								this.selected = false;
-								console.log("deselected");
-							} 							
-						}
+						var normalY = -2 * (y / canvas.height) + 1;						
 
 						this.center = this.gObject.center;
 						this.right = this.gObject.right;
 						this.left = this.gObject.left;
 						this.top = this.gObject.top;
 						this.bottom = this.gObject.bottom;
+						if (!this.selected)
+						{
+							if (this.in([normalX, normalY]))
+							{
+								this.select();
+								return true;
+							} 					
+						}
+						else
+						{
+							if (this.in([normalX, normalY]))
+							{
+								this.deselect();
+								return true;
+							} 							
+						}
+						return false;
 					}
 
 					Unit.prototype.rightClick = function(x, y)
@@ -803,9 +967,9 @@
 						}
 					}
 
-					Resource.prototype.mouseDown = function(x, y)
+					Resource.prototype.click = function(x, y)
 					{
-						this.gObject.mouseDown(x, y);
+						this.gObject.click(x, y);
 					}
 
 					/*======================================================== BASE CLASS ======================================================= */
@@ -839,7 +1003,7 @@
 						toDraw.index += this.screenPos.length;
 					}
 
-					Rectangle.prototype.mouseDown = function(posx, posy)
+					Rectangle.prototype.click = function(posx, posy)
 					{
 					}
 
@@ -927,7 +1091,7 @@
 						toDraw.index += this.screenPos.length;
 					}
 
-					Triangle.prototype.mouseDown = function(posx, posy)
+					Triangle.prototype.click = function(posx, posy)
 					{						
 					}
 
@@ -1039,7 +1203,7 @@
 						toDraw.index += this.screenPos.length;
 					}
 
-					Circle.prototype.mouseDown = function(posx, posy)
+					Circle.prototype.click = function(posx, posy)
 					{						
 					}
 
