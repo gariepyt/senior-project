@@ -184,6 +184,15 @@
 								mouseUpEvent = false;
 								if (!shortClick)
 								{
+									if (innerSelectionBox.group.length > 0)
+									{
+										innerSelectionBox.remove(innerSelectionBox.group[0]);
+									}
+									if (outerSelectionBox.group.length > 0)
+									{
+										outerSelectionBox.remove(outerSelectionBox.group[0]);
+									}
+
 									shortClick = true;
 									var corner1x = 2 * (up_x / canvas.width) - 1;
 									var corner1y = -2 * (up_y / canvas.height) + 1;
@@ -217,18 +226,21 @@
 									var bottomLeft = [selectAllRect.left, selectAllRect.bottom];
 									for(i = 0; i < combinedGroup.group.length; i++)
 									{
-										var iTopRight = [combinedGroup.group[i].right, combinedGroup.group[i].top]; 
-										var iTopLeft = [combinedGroup.group[i].left, combinedGroup.group[i].top];
-										var iBottomRight = [combinedGroup.group[i].right, combinedGroup.group[i].bottom];
-										var iBottomLeft = [combinedGroup.group[i].left, combinedGroup.group[i].bottom];
-										if(combinedGroup.group[i].in(topRight) || combinedGroup.group[i].in(topLeft) ||
-											combinedGroup.group[i].in(bottomRight) || combinedGroup.group[i].in(bottomLeft) ||
-											combinedGroup.group[i].in(selectAllRect.center) ||
-											selectAllRect.in(iTopRight) || selectAllRect.in(iTopLeft) || 
-											selectAllRect.in(iBottomRight) || selectAllRect.in(iBottomLeft) ||
-											selectAllRect.in(combinedGroup.group[i].center))
+										if (combinedGroup.group[i].constructor.name == 'Unit' && combinedGroup.group[i].owner == p1)
 										{
-											combinedGroup.group[i].select();
+											var iTopRight = [combinedGroup.group[i].right, combinedGroup.group[i].top]; 
+											var iTopLeft = [combinedGroup.group[i].left, combinedGroup.group[i].top];
+											var iBottomRight = [combinedGroup.group[i].right, combinedGroup.group[i].bottom];
+											var iBottomLeft = [combinedGroup.group[i].left, combinedGroup.group[i].bottom];
+											if(combinedGroup.group[i].in(topRight) || combinedGroup.group[i].in(topLeft) ||
+												combinedGroup.group[i].in(bottomRight) || combinedGroup.group[i].in(bottomLeft) ||
+												combinedGroup.group[i].in(selectAllRect.center) ||
+												selectAllRect.in(iTopRight) || selectAllRect.in(iTopLeft) || 
+												selectAllRect.in(iBottomRight) || selectAllRect.in(iBottomLeft) ||
+												selectAllRect.in(combinedGroup.group[i].center))
+											{
+												combinedGroup.group[i].select();
+											}
 										}
 									}									
 								}
@@ -268,7 +280,6 @@
 							}
 							else if (mouseDownEvent && !shortClick)
 							{
-								console.log("Mouse is being held down...consider drawing the click and drag rect");
 								var corner1x = 2 * (old_x / canvas.width) - 1;
 								var corner1y = -2 * (old_y / canvas.height) + 1;
 								var corner2x = 2 * (down_x / canvas.width) - 1;
@@ -367,7 +378,7 @@
 								innerSelectionBox.group[j].draw(innerSelectionBox);
 							}
 							innerSelectionBox.render();
-							
+
 							for(i=0; i < myGroups.length; i++)
 							{
 								for(j=0; j < myGroups[i].group.length; j++)
