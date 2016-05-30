@@ -152,8 +152,8 @@
 						r2 = new Resource([-0.5, 0], "triangle");
 						r3 = new Resource([0.5, 0], "circle");
 
-						b1 = new Base([0, -0.75]);
-						b2 = new Base([0, 0.75]);
+						b1 = new Base([0, -0.75], p1);
+						b2 = new Base([0, 0.75], p2);
 
 						// outerSelectionBox.add(new Rectangle([-.25, -.25], .03, .03));
 
@@ -342,10 +342,10 @@
 								{
 									if(i != j && combinedGroup.group[i].constructor.name == "Unit")
 									{	
-										if (combinedGroup.group[i].inRange(combinedGroup.group[j]) && combinedGroup.group[i].owner != combinedGroup.group[j].owner && 
+										if (combinedGroup.group[i].inRange(combinedGroup.group[j]) && 
+											(combinedGroup.group[i].owner != combinedGroup.group[j].owner) && 
 											(combinedGroup.group[j].constructor.name == "Unit" || combinedGroup.group[j].constructor.name=='Base'))
 										{
-											//TODO: start attacking animation
 											combinedGroup.group[i].dealDamage(combinedGroup.group[j]);
 										}
 										else
@@ -981,10 +981,12 @@
 
 					/*========================== BASE CLASS ======================== */
 
-					function Base(center)
+					function Base(center, owner)
 					{
 						this.center = center;
-						this.gObject = new Rectangle(center, 0.25, 0.25)
+						this.gObject = new Rectangle(center, 0.25, 0.25);
+						this.health = 150000;
+						this.owner = owner;
 					}					
 
 					Base.prototype.click = function(x, y)
@@ -1023,6 +1025,7 @@
 
 					Base.prototype.takeDamage = function(damage)
 					{
+						console.log("Base taking damage");
 						this.health -= damage;
 						if (this.health == 0)
 						{
