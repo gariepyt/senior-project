@@ -152,11 +152,17 @@
 						r2 = new Resource([-0.5, 0], "triangle");
 						r3 = new Resource([0.5, 0], "circle");
 
+						b1 = new Base([0, -0.75], p1);
+						b2 = new Base([0, 0.75], p2);
+
 						// outerSelectionBox.add(new Rectangle([-.25, -.25], .03, .03));
 
 						neutralResources.add(r1);
 						neutralResources.add(r2);
 						neutralResources.add(r3);
+
+						p1Owned.add(b1);
+						p2Owned.add(b2);
 
 						p1.spawnRock(p1Owned, p1Owned);
 						p1.spawnPaper(p1Owned, p1Owned);
@@ -336,9 +342,10 @@
 								{
 									if(i != j && combinedGroup.group[i].constructor.name == "Unit")
 									{	
-										if (combinedGroup.group[i].inRange(combinedGroup.group[j]) && combinedGroup.group[i].owner != combinedGroup.group[j].owner && combinedGroup.group[j].constructor.name == "Unit")
+										if (combinedGroup.group[i].inRange(combinedGroup.group[j]) && 
+											(combinedGroup.group[i].owner != combinedGroup.group[j].owner) && 
+											(combinedGroup.group[j].constructor.name == "Unit" || combinedGroup.group[j].constructor.name=='Base'))
 										{
-											//TODO: start attacking animation
 											combinedGroup.group[i].dealDamage(combinedGroup.group[j]);
 										}
 										else
@@ -864,7 +871,7 @@
 
 					Unit.prototype.collisionTrigger = function(collideWith)
 					{
-						if (collideWith.constructor.name == "Unit")
+						if (collideWith.constructor.name == "Unit" || collideWith.constructor.name == "Base")
 						{	
 							this.moving = false;
 							var newPos;
@@ -879,7 +886,7 @@
 						}
 					}
 
-					/*======================================================== RESOURCE CLASS======================================================= */
+					/*==================== RESOURCE CLASS===================== */
 
 					function Resource(center, shape)
 					{
@@ -972,9 +979,101 @@
 						this.gObject.click(x, y);
 					}
 
-					/*======================================================== BASE CLASS ======================================================= */
+					/*========================== BASE CLASS ======================== */
 
-					/*========================================================  RECTANGLE CLASS =======================================================*/
+					function Base(center, owner)
+					{
+						this.center = center;
+						this.gObject = new Rectangle(center, 0.25, 0.25);
+						this.health = 150000;
+						this.owner = owner;
+					}					
+
+					Base.prototype.click = function(x, y)
+					{
+						this.gObject.click(x, y);
+						var normalX = 2 * (x / canvas.width) - 1;
+						var normalY = -2 * (y / canvas.height) + 1;
+						if (this.in([normalX, normalY]))
+						{
+							return true;
+						} 					
+						else
+						{
+							return false;
+						}
+					}
+
+					Base.prototype.rightClick = function(x, y)
+					{						
+					}
+
+					Base.prototype.update = function()
+					{
+						this.gObject.update();
+						this.center = this.gObject.center;
+						this.right = this.gObject.right;
+						this.left = this.gObject.left;
+						this.top = this.gObject.top;
+						this.bottom = this.gObject.bottom;
+					}
+
+					Base.prototype.draw = function(toDraw)
+					{
+						this.gObject.draw(toDraw);
+					}
+
+					Base.prototype.takeDamage = function(damage)
+					{
+						console.log("Base taking damage");
+						this.health -= damage;
+						if (this.health == 0)
+						{
+							this.remove();
+						}
+					}
+
+					Base.prototype.dealDamage = function(opponent)
+					{
+					}
+
+					Base.prototype.setDestination = function(destination)
+					{						
+					}
+
+					Base.prototype.setPos = function(center)
+					{
+						this.center = center;
+						this.gObject.setPos(center);
+						this.right = this.gObject.right;
+						this.left = this.gObject.left;
+						this.top = this.gObject.top;
+						this.bottom = this.gObject.bottom;
+					}
+
+					Base.prototype.in = function(point)
+					{
+						/*Checks if point is in Base*/
+						if(point[0] < this.gObject.right && point[0] > this.gObject.left && point[1] < this.gObject.top && point[1] > this.gObject.bottom)
+						{
+							return true;
+						}
+						else
+						{
+							return false;
+						}
+					}
+
+					Base.prototype.remove = function()
+					{
+						this.dGroup.remove(this);
+					}
+
+					Base.prototype.collisionTrigger = function(collideWith)
+					{
+					}
+
+					/*=============================  RECTANGLE CLASS =================================*/
 
 					function Rectangle(center, width, height)
 					{
