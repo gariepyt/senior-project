@@ -139,7 +139,6 @@
 						var p2Owned = new DrawGroup(maxUnits, [1.0, 0.0, 0.0, 1.0]); 
 						var p1Selected = new DrawGroup(maxUnits, [0.52, 0.8, 0.92, 1.0]);
 						var p2Selected = new DrawGroup(maxUnits, [1.0, 0.41, 0.70, 1.0]);
-						var myGroups = [neutralResources, p1Owned, p2Owned, p1Selected, p2Selected];
 
 						p1 = new Player(true);
 						p1.standard = p1Owned;
@@ -147,6 +146,8 @@
 						p2 = new Player(false);
 						p2.standard = p2Owned;
 						p2.selected = p2Selected;
+						var myGroups = [neutralResources, p1.standard, p2.standard, p1.selected, p2.selected];
+
 						
 						r1 = new Resource([0, 0], "rectangle");
 						r2 = new Resource([-0.5, 0], "triangle");
@@ -164,11 +165,12 @@
 						p1Owned.add(b1);
 						p2Owned.add(b2);
 
-						p1.spawnRock(p1Owned, p1Owned);
-						p1.spawnPaper(p1Owned, p1Owned);
-						p1.spawnScissors(p1Owned, p1Owned);
-						p2.spawnRock(p2Owned, p2Owned);
-						p2.spawnPaper(p2Owned, p2Owned);
+						p1.spawnRock(p1.standard, p1.standard);
+						p1.spawnPaper(p1.standard, p1.standard);
+						p1.spawnScissors(p1.standard, p1.standard);
+						p2.spawnRock(p2.standard, p2.standard);
+						p2.spawnPaper(p2.standard, p2.standard);
+						p2.spawnScissors(p2.standard, p2.standard);
 
 						var combinedGroup;
 						function update()
@@ -328,7 +330,7 @@
 
 							if (keyboardEvent != null)
 							{
-								p1.handleEvents(keyboardEvent, p1Owned, combinedGroup);
+								p1.handleEvents(keyboardEvent, p1.standard, combinedGroup);
 								keyboardEvent = null;
 							}
 
