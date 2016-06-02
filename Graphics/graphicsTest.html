@@ -18,7 +18,8 @@
 					{
 						gl_FragColor = uColor;
 					}
-			</script>        
+			</script>
+			<script src="js.cookie.js"></script>        
 			<script type="text/javascript">
 
 					var gl;
@@ -399,6 +400,72 @@
 						setInterval(update, 1);
 
 						setInterval(drawLoop, 16);
+						/*========================================================  LOAD GAME =======================================================*/
+						var loadButton = document.getElementById("load");
+						loadButton.onclick = function() {
+							//Check for Game ID Cookie
+							if (Cookies.get('gameid')) {
+								//Retrieve Unit Data from Server
+
+
+								//Retrieve Game Data from Cookies
+					        	p1 = JSON.parse(JSON.stringify(Cookies.getJSON('p1')));
+					        	p2 = JSON.parse(JSON.stringify(Cookies.getJSON('p2')));
+					        	r1 = JSON.parse(JSON.stringify(Cookies.getJSON('r1')));
+					        	r2 = JSON.parse(JSON.stringify(Cookies.getJSON('r2')));
+					        	r3 = JSON.parse(JSON.stringify(Cookies.getJSON('r3')));
+					        	b1 = JSON.parse(JSON.stringify(Cookies.getJSON('b1')));
+					        	b2 = JSON.parse(JSON.stringify(Cookies.getJSON('b2')));
+
+							} else {
+								//Output Message Data Cannot Be Loaded
+
+							}
+						}
+
+				        /*========================================================  SAVE GAME =======================================================*/
+				        var saveButton = document.getElementById("save");
+				        var gameid;
+				        saveButton.onclick = function() {
+					        if (Cookies.get('gameid')) {
+					        	//Use Existing Game ID
+					            gameid = Cookies.get('gameid');
+
+					            //Pass in Player Instances
+					            //Units will be sent to server
+					            //All other data will be saved as cookies
+					            prepData(gameid, p1, p2, r1, r2, r3, b1, b2);
+
+					        } else {
+					            //Get New Game ID from server
+					            var httpRequest = new XMLHttpRequest();
+					            var url = "http://web.engr.oregonstate.edu/~sibailaj/framework/createid.php";
+					            var newid;
+
+					            if (httpRequest) {
+					        	    httpRequest.onreadystatechange = handle;
+					            	httpRequest.open('GET', url, true);
+					            	httpRequest.send();
+					            }
+
+					            function handle() {
+					                if (httpRequest.readyState === httpRequest.DONE && httpRequest.status === 200) {
+
+					                	//Set id cookie
+					                	gameid = httpRequest.responseText;
+					                	Cookies.set('gameid', gameid);
+
+					                	//Pass in Player Instances
+					                	//Units will be sent to server
+					                	//All other data will be saved as cookies
+					                	prepData(gameid, p1, p2, r1, r2, r3, b1, b2);
+					                }
+					                else {
+					                  //alert("Error: Bad Request");
+					                }
+					            }					            
+					        }
+				        }
 					}
 
 					/*================== DRAW GROUP =================*/
@@ -1381,9 +1448,176 @@
 							return false;
 						}
 					}
+
+
+
+
+					/*========================================================  FILE RETRIEVAL AND UPLOAD REQUESTS =======================================================*/
+
+					/**
+					 * setFile(unit)
+					 * Function that sends unit object data to server to be
+					 * processed as an individual file in the game id directory.
+					 * 
+					 * Parameter: unit (Object)
+					 * Return Value: true (If successful)
+					*/
+					function setFile(unit) { //SINGLE FILE UPLOAD REQUEST 
+						var httpRequest = new XMLHttpRequest();
+						var url = "http://web.engr.oregonstate.edu/~sibailaj/framework/handler.php";
+						var payload = JSON.stringify(unit);
+
+						console.log(payload);
+
+						if (httpRequest) {
+							httpRequest.onreadystatechange = handle;
+							httpRequest.open('POST', url, true);
+							httpRequest.setRequestHeader("Content-type", "application/json");
+							httpRequest.send(payload);
+						}
+
+						function handle() {
+							if (httpRequest.readyState === 4 && httpRequest.status === 200) {
+								
+								return true;									
+							} else {
+								//alert("Error: Bad Request");
+							}
+						}
+					}
+
+					/**
+					 * getFiles(id)
+					 * Function that retrieves all unit object data from server
+					 * from the specified game id directory.
+					 * 
+					 * Parameter: id (Integer)
+					 * Return Value: unitArray (Array of unit objects)
+					*/
+					function getFiles(id) { //GAME DATA RETRIEVAL REQUEST
+						var httpRequest = new XMLHttpRequest();
+						var url = "http://web.engr.oregonstate.edu/~sibailaj/framework/handler.php?id=" + id;
+						var unitArray;
+
+						if (httpRequest) {
+							httpRequest.onreadystatechange = handle;
+							httpRequest.open('GET', url, true);
+							httpRequest.send();
+						}
+
+						function handle() {
+							if (httpRequest.readyState === 4 && httpRequest.status === 200) {
+								//Display Response
+								document.getElementById("here").innerHTML = httpRequest.responseText;
+
+								//Parse JSON Data
+								unitArray = JSON.parse(httpRequest.responseText);						
+							}
+							else {
+								//alert("Error: Bad Request");
+							}
+						}
+						return unitArray;
+					}
+
+					/**
+					 * prepData(id, p1, p2, r1, r2, r3, b1, b2)
+					 * Function that formats Player instances before sending
+					 * to server to save as unit data files. Also saves non-unit data
+					 * as cookies on server.
+					 * 
+					 * Parameters: id (Integer), p1, p2 (Player Instances),
+					 * r1, r2, r3 (Resource Instances), b1, b2 (Base Instances)'
+					 *
+					 * Return Value: true (if all requests were successful)
+					*/
+			        function prepData(gameid, p1, p2, r1, r2, r3, b1, b2) {
+			        	var success;
+			        	var unitArray = [];
+			        	var x;
+			        	var unitObject;
+
+			        	parsed1 = JSON.parse(p1);
+
+			        	//Set Cookie Data
+			        	Cookies.set('p1', parsed1);
+			        	Cookies.set('p2', p2);
+			        	Cookies.set('r1', r1);
+			        	Cookies.set('r2', r2);
+			        	Cookies.set('r3', r3);
+			        	Cookies.set('b1', b1);
+			        	Cookies.set('b2', b2);
+
+			        	//Build Unit Array
+			        	//Add Human Player's Units
+			        	if (p1.hasOwnProperty("standard")) {
+				        	if (p1.standard.hasOwnProperty("group")) {
+					        	for (x = 0; x < p1.standard.group.length; x++) {
+					        		if (p1.standard.group[x] instanceof Unit) {
+					        			unitArray.push(p1.standard.group[x]);
+					        		}
+					        	}
+				        	}
+				        }
+
+			        	//Add AI's Units
+			        	if (p2.hasOwnProperty("standard")) {
+				        	if (p2.standard.hasOwnProperty("group")) {			        	
+					        	for (x = 0; x < p2.standard.group.length; x++) {
+					        		if (p2.standard.group[x] instanceof Unit) {
+					        			unitArray.push(p2.standard.group[x]);
+					        		}
+					        	}
+							}
+						}
+
+			          	for (var i = 0; i < unitArray.length; i++) {
+
+				            unitObject = new Object();
+
+				            if (i == 0) {				            	
+				            	unitObject.create = 1;
+				            } else {
+			              		unitObject.create = 0;
+			            	}			            	
+
+			            	//Build Unit Object
+			            	unitObject.gameid = gameid;
+			            	unitObject.attack = unitArray[i].attack;
+			            	unitObject.bottom = unitArray[i].bottom;
+			            	unitObject.center = unitArray[i].center;
+			            	unitObject.gObject = unitArray[i].gObject;
+			            	unitObject.health = unitArray[i].health;
+			            	unitObject.index = unitArray[i].index;
+			            	unitObject.left = unitArray[i].left;
+			            	unitObject.human = unitArray[i].owner.human;
+			            	unitObject.paper = unitArray[i].owner.paper;
+			            	unitObject.rock = unitArray[i].owner.rock;
+			            	unitObject.scissors = unitArray[i].owner.scissors;
+			            	unitObject.range = unitArray[i].range;
+			            	unitObject.right = unitArray[i].right;
+			            	unitObject.selected = unitArray[i].selected;
+			            	unitObject.shape = unitArray[i].shape;
+			            	unitObject.speed = unitArray[i].speed;
+			            	unitObject.top = unitArray[i].top;
+			            	unitObject.index = i + 1;
+
+			            	if (unitArray[i].owner.human == true) {
+			            		unitObject.player = "human";
+			            	} else {
+			            		unitObject.player = "ai";
+			            	}
+
+			          		success = setFile(unitObject);
+			        	}
+			        	return success;
+			        }
 			</script>
 	</head>
 	<body onload="init()">
 			<canvas id="mycanvas" width="1600" height="1000"></canvas>
+			<canvas id="mycanvas" width="800" height="500"></canvas>
+			<input type="button" id="save" value="Save Game">
+			<input type="button" id="load" value="Load Game">
 	</body>
 </html>
