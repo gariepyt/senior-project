@@ -411,17 +411,23 @@
 
 
 								//Retrieve Game Data from Cookies
-					        	p1 = JSON.parse(JSON.stringify(Cookies.getJSON('p1')));
-					        	p2 = JSON.parse(JSON.stringify(Cookies.getJSON('p2')));
-					        	r1 = JSON.parse(JSON.stringify(Cookies.getJSON('r1')));
-					        	r2 = JSON.parse(JSON.stringify(Cookies.getJSON('r2')));
-					        	r3 = JSON.parse(JSON.stringify(Cookies.getJSON('r3')));
-					        	b1 = JSON.parse(JSON.stringify(Cookies.getJSON('b1')));
-					        	b2 = JSON.parse(JSON.stringify(Cookies.getJSON('b2')));
+					        	p1 = JSON.parse(JSON.stringify(Cookies.get('p1')));
+					        	p2 = JSON.parse(JSON.stringify(Cookies.get('p2')));
+					        	r1 = JSON.parse(JSON.stringify(Cookies.get('r1')));
+					        	r2 = JSON.parse(JSON.stringify(Cookies.get('r2')));
+					        	r3 = JSON.parse(JSON.stringify(Cookies.get('r3')));
+					        	b1 = JSON.parse(JSON.stringify(Cookies.get('b1')));
+					        	b2 = JSON.parse(JSON.stringify(Cookies.get('b2')));
 
 							} else {
 								//Output Message Data Cannot Be Loaded
 
+							}
+
+							function restoreInstance(instance, cookie) {
+
+
+								return instance;
 							}
 						}
 
@@ -1613,13 +1619,15 @@
 
 			        	function replacer(key, value) {
 				        	if (typeof value === "object") {
-					        	if (this.hasOwnProperty("dGroup")) {
-					        		return undefined;
-						        } else if (this.hasOwnProperty("owner")) {
-						        	return undefined;
-						        } else if (this.hasOwnProperty("v")) {
-						        	return undefined;
-						        }
+				        		if (key === "dGroup") {
+				        			return undefined;
+				        		} else if (key === "owner") {
+				        			return undefined;
+				        		} else if (key === "v") {
+				        			return undefined;
+				        		} else if (value instanceof Unit) {
+				        			return undefined;
+				        		}
 				        	}
 				        	return value;
 				        }
