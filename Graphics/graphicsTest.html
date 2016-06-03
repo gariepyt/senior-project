@@ -1539,16 +1539,13 @@
 			        	var x;
 			        	var unitObject;
 
-			        	parsed1 = JSON.parse(p1);
-
-			        	//Set Cookie Data
-			        	Cookies.set('p1', parsed1);
-			        	Cookies.set('p2', p2);
-			        	Cookies.set('r1', r1);
-			        	Cookies.set('r2', r2);
-			        	Cookies.set('r3', r3);
-			        	Cookies.set('b1', b1);
-			        	Cookies.set('b2', b2);
+			        	Cookies.set('p1', JSON.stringify(p1, replacer));
+			        	Cookies.set('p2', JSON.stringify(p2, replacer));
+			        	Cookies.set('r1', JSON.stringify(r1, replacer));
+			        	Cookies.set('r2', JSON.stringify(r2, replacer));
+			        	Cookies.set('r3', JSON.stringify(r3, replacer));
+			        	Cookies.set('b1', JSON.stringify(b1, replacer));
+			        	Cookies.set('b2', JSON.stringify(b2, replacer));
 
 			        	//Build Unit Array
 			        	//Add Human Player's Units
@@ -1613,7 +1610,22 @@
 			          		success = setFile(unitObject);
 			        	}
 			        	return success;
+
+			        	function replacer(key, value) {
+				        	if (typeof value === "object") {
+					        	if (this.hasOwnProperty("dGroup")) {
+					        		return undefined;
+						        } else if (this.hasOwnProperty("owner")) {
+						        	return undefined;
+						        } else if (this.hasOwnProperty("v")) {
+						        	return undefined;
+						        }
+				        	}
+				        	return value;
+				        }
 			        }
+
+
 			</script>
 	</head>
 	<body onload="init()">
