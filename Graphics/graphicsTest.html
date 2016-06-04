@@ -142,8 +142,28 @@
 
 						p1 = new Player(true);
 						p1.standard = p1Owned;
-						p1.selected = p1Selected;						
-						p2 = new Player(false);
+						p1.selected = p1Selected;	
+
+						/* Getting difficulty from user */
+						var corNum = false;
+						var diffNum = 1;
+						while (corNum == false) {
+							diffNum = prompt("Select difficulty in range 1 (easy) - 5 (hard)", "1");
+							if (!isNaN(diffNum)) { // is a number
+								diffNum = Number(diffNum);
+								if (diffNum >= 1 && diffNum <= 5) {
+									corNum = true;
+								}
+								else {
+									alert(diffNum + " is out of range!");
+								}
+							}
+							else {
+								alert(diffNum + " is not a number!");
+							}
+						}
+
+						p2 = new Player(false, diffNum);
 						p2.standard = p2Owned;
 						p2.selected = p2Selected;
 						var myGroups = [neutralResources, p1.standard, p2.standard, p1.selected, p2.selected];
@@ -360,6 +380,9 @@
 
 
 							/*========================== UPDATES ==================================*/
+							/* Update AI and Player points as well */
+							p1.update();
+							p2.update(p1, neutralResources);
 							for(i=0; i < combinedGroup.group.length; i++)
 							{
 								combinedGroup.group[i].update()
@@ -525,11 +548,15 @@
 
 					/*========================================================  PLAYER CLASS =======================================================*/
 
-					function Player(human)
+					function Player(human, difficulty=null)
 					{
 						/*ai: boolean determining whether or not this is the ai player*/
 
 						this.human = human;
+						if (human == false) {
+							this.difficulty = difficulty;
+							this.toIdle();
+						}
 
 						//RESOURCES
 						this.rock = 200;
@@ -584,7 +611,7 @@
 						}
 						else
 						{
-							console.log("Not enough rock resources");
+							// console.log("Not enough rock resources");
 						}
 					}
 
@@ -694,6 +721,123 @@
 						else if (e.keyCode == 69)
 						{
 							this.spawnScissors(toDraw, colliders);
+						}
+					}
+
+					Player.prototype.update = function(enemy=null, resources=null) {
+						if (this.human == false) { // This is the AI, which means we need to move the pieces
+							// console.log("This is the enemy!");
+							// console.log("Enemy size: " + this.standard.group.length);
+
+							/* If not in defend mode, loop through all the players and randomly decide what to do (if they are not already doing something) */
+							if (this.status != "defend") {
+								if (this.statusCount == 0) {
+									// Options: attack base, attack player, harvest, or do nothing
+									for (var x = 1; x < this.standard.group.length; x++) {
+										/* Roll a rand */
+										var randRoll = Math.floor(Math.random() * 4);
+										console.log("Enemy rolled: " + randRoll);
+										if (randRoll == 0) { // Attack the base
+											this.standard.group[x].setDestination(enemy.standard.group[0].center);
+										}
+										else if (randRoll == 1) { // Attack a random player
+											var randPlayer = Math.floor(Math.random() * (enemy.standard.group.length - 1) + 1);
+											this.standard.group[x].setDestination(enemy.standard.group[randPlayer].center);
+										}
+										else if (randRoll == 2) { // Harvest
+											var randHarv = Math.floor(Math.random() * (resources.group.length));
+											if(resources.group[randHarv].owner != this) {
+												this.standard.group[x].setDestination(resources.group[randHarv].center);
+											}
+											
+										}
+										else {
+											/* Do nothing */
+										}
+
+										/* Randomly decide if new item will be created */
+										var randResDecide = Math.floor(Math.random() * (15000 / (this.difficulty * this.difficulty)));
+										if (randResDecide < 600) {
+											var randResources = Math.floor(Math.random() * 2);
+											if (randResources) {
+												this.spawnRock(this.standard, this.standard);
+											}
+
+											randResources = Math.floor(Math.random() * 2);
+											if (randResources) {
+												this.spawnPaper(this.standard, this.standard);
+											}
+
+											randResources = Math.floor(Math.random() * 2);
+											if (randResources) {
+												this.spawnScissors(this.standard, this.standard);
+											}
+										}
+
+										this.toIdle();
+									}
+
+								}
+								else {
+									console.log("Counting down");
+									this.statusCount--;
+								}
+
+
+							}
+							else { // AI is in defend mode
+								if (this.statusCount >= 0) {
+									this.statusCount--;
+								}
+								else {
+									this.toIdle();
+								}	
+							}
+
+
+
+
+
+						}
+						else { // This is the human, which means we need to update their inventory
+							document.getElementById('rockR').textContent = this.rock;
+							document.getElementById('paperR').textContent = this.paper;
+							document.getElementById('scissorsR').textContent = this.scissors;
+						}
+					}
+
+					Player.prototype.toIdle = function() {
+						this.status = "idle";
+						this.statusCount = 2000 / this.difficulty;
+					}
+
+					Player.prototype.defendBase = function() {
+						if (this.human == false) {
+							console.log("The base is under attack!");
+
+							if (this.status != "defend") {
+								this.status = "defend";
+								this.statusCount = 1000 * this.difficulty;
+								/* Decide if the AI will move the pieces to defend the base */
+								for (var x = 1; x < this.standard.group.length; x++){
+									var randCheck = Math.floor(Math.random() * (5 + this.difficulty)); // Is this a good setting?
+									if (randCheck >= 5) { // Is this a good setting?
+										this.standard.group[x].setDestination(this.standard.group[0].center);
+									}
+								}
+								
+							}
+							else {
+								/* NOTE: this should be happening in the update instead! It should reset the number instead */
+								this.statusCount = 1000 * this.difficulty;
+							}
+							
+
+							console.log("Enemy size: " + this.standard.group.length);
+							for (var x = 1; x < this.standard.group.length; x++) {
+								console.log("Enemy " + x + " type: " + this.standard.group[x].shape);
+							}
+							// for (var x = 0; x < p1.)
 						}
 					}
 
@@ -987,7 +1131,7 @@
 					{
 						this.center = center;
 						this.gObject = new Rectangle(center, 0.25, 0.25);
-						this.health = 150000;
+						this.health = 1500; // Originally 150000
 						this.owner = owner;
 					}					
 
@@ -1027,9 +1171,14 @@
 
 					Base.prototype.takeDamage = function(damage)
 					{
-						console.log("Base taking damage");
+						// console.log("Base taking damage");
 						this.health -= damage;
-						if (this.health == 0)
+						
+						if (this.owner.human == false /*&& this.owner.status != "defend"*/) { // This should always happen so that there can be a countdown in the player class
+							this.owner.defendBase();
+						}
+
+						if (this.health <= 0)
 						{
 							this.remove();
 						}
@@ -1068,7 +1217,18 @@
 
 					Base.prototype.remove = function()
 					{
-						this.dGroup.remove(this);
+						/* Added code to print who won. */
+						if (this.owner.human == true) {
+							this.dGroup.remove(this);
+							alert("GAME OVER!\nYou lose!");
+							location.reload();
+						}
+						else {
+							this.dGroup.remove(this);
+							alert("GAME OVER!\nYou win!");
+							location.reload();
+
+						}
 						console.log("GAME OVER!"); //TODO: display to user
 					}
 
@@ -1387,5 +1547,21 @@
 	</head>
 	<body onload="init()">
 			<canvas id="mycanvas" width="1600" height="1000"></canvas>
+			<table border="1" style="float:right; margin-top: 100px; margin-right: 20px;">
+				<thead>
+				<tr>
+					<td>Rock</td>
+					<td>Paper</td>
+					<td>Scissors</td>
+				</tr>	
+				</thead>
+				<tbody id="myResources" >
+					<tr>
+						<td id="rockR">0</td>
+						<td id="paperR">0</td>
+						<td id="scissorsR">0</td>
+					</tr>
+				</tbody>
+			</table>
 	</body>
 </html>
