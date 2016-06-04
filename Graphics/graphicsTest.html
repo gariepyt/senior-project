@@ -405,29 +405,95 @@
 						/*========================================================  LOAD GAME =======================================================*/
 						var loadButton = document.getElementById("load");
 						loadButton.onclick = function() {
-							//Check for Game ID Cookie
 							if (Cookies.get('gameid')) {
-								//Retrieve Unit Data from Server
+								var httpRequest = new XMLHttpRequest();
+								var url = "http://web.engr.oregonstate.edu/~sibailaj/framework/handler.php?gameid=" + Cookies.get('gameid');
+								var unitObject = new Object();
 
+								if (httpRequest) {
+									httpRequest.onreadystatechange = handle;
+									httpRequest.open('GET', url, true);
+									httpRequest.send();
+								}
 
-								//Retrieve Game Data from Cookies
-					        	p1 = JSON.parse(JSON.stringify(Cookies.get('p1')));
-					        	p2 = JSON.parse(JSON.stringify(Cookies.get('p2')));
-					        	r1 = JSON.parse(JSON.stringify(Cookies.get('r1')));
-					        	r2 = JSON.parse(JSON.stringify(Cookies.get('r2')));
-					        	r3 = JSON.parse(JSON.stringify(Cookies.get('r3')));
-					        	b1 = JSON.parse(JSON.stringify(Cookies.get('b1')));
-					        	b2 = JSON.parse(JSON.stringify(Cookies.get('b2')));
-
+								function handle() {
+									if (httpRequest.readyState === httpRequest.DONE) {
+										if (httpRequest.status === 200) {
+											//Parse JSON Data
+											unitObject = JSON.parse(httpRequest.responseText);
+											loadGame(unitObject);
+										}
+									}
+								}
 							} else {
 								//Output Message Data Cannot Be Loaded
+							}
+						}
 
+						function loadGame(unitObject) {
+							//Retrieve Unit Data from Server
+							//var unitObject = new Object();
+							//unitObject = getFiles(Cookies.get('gameid'));
+
+							//Separate p1 and p2 Units
+							var p2_units = getUnits(unitObject, false);
+							var p1_units = getUnits(unitObject, true);							
+
+							//Restore Players
+							//p1 = restorePlayer(p1, p1_units);
+							//p2 = restorePlayer(p2, p2_units);
+
+							//Restore Resources
+				        	//r1 = JSON.parse(JSON.stringify(Cookies.get('r1')));
+				        	//r2 = JSON.parse(JSON.stringify(Cookies.get('r2')));
+				        	//r3 = JSON.parse(JSON.stringify(Cookies.get('r3')));
+
+				        	//Restore Bases
+				        	//b1 = JSON.parse(JSON.stringify(Cookies.get('b1')));
+				        	//b2 = JSON.parse(JSON.stringify(Cookies.get('b2')));						
+
+							function getUnits(unitObject, human) {
+								var x;
+								var unit;
+								var playerUnits = [];
+
+								for (x = (unitObject.length - 1); x > -1; x--) {
+									if (unitObject[x].human == human) {
+										unit = unitObject.pop();
+										playerUnits.push(unit);
+									}
+								}
+								return playerUnits;
 							}
 
-							function restoreInstance(instance, cookie) {
+							function restorePlayer(p, unitObject) {
+								var s;
+								if (p.human == true) {
+									s = JSON.parse(Cookies.get('p1'));
+								} else {
+									s = JSON.parse(Cookies.get('p2'));
+								}
+								var x;
+								var unit;
+								s.standard.v = p.standard.v;
 
+								//Add Units to Instance
+					        	if (s.hasOwnProperty("standard")) {
+						        	if (s.standard.hasOwnProperty("group")) {
+							        	for (x = 0; x < s.standard.group.length; x++) {
+							        		if (s.standard.group[x] == null) {							    
+							        			//Pop unitObject array for human 
+							        			//and set equal to p.standard.group[x]
+							        			unit = unitObject.pop();
+							        			s.standard.group[x] = unit;
+							        		}
+							        		s.standard.group[x].dGroup = s.standard;
+							        		s.standard.group[x].owner = s;
+							        	}
+						        	}
+						        }
 
-								return instance;
+								return s;
 							}
 						}
 
@@ -1502,10 +1568,10 @@
 					 * Parameter: id (Integer)
 					 * Return Value: unitArray (Array of unit objects)
 					*/
-					function getFiles(id) { //GAME DATA RETRIEVAL REQUEST
+					function getFiles(gameid) { //GAME DATA RETRIEVAL REQUEST
 						var httpRequest = new XMLHttpRequest();
-						var url = "http://web.engr.oregonstate.edu/~sibailaj/framework/handler.php?id=" + id;
-						var unitArray;
+						var url = "http://web.engr.oregonstate.edu/~sibailaj/framework/handler.php?gameid=" + gameid;
+						var unitObject = new Object();
 
 						if (httpRequest) {
 							httpRequest.onreadystatechange = handle;
@@ -1514,18 +1580,14 @@
 						}
 
 						function handle() {
-							if (httpRequest.readyState === 4 && httpRequest.status === 200) {
-								//Display Response
-								document.getElementById("here").innerHTML = httpRequest.responseText;
-
-								//Parse JSON Data
-								unitArray = JSON.parse(httpRequest.responseText);						
-							}
-							else {
-								//alert("Error: Bad Request");
+							if (httpRequest.readyState === httpRequest.DONE) {
+								if (httpRequest.status === 200) {
+									//Parse JSON Data
+									unitObject = JSON.parse(httpRequest.responseText);
+									return unitObject;
+								}
 							}
 						}
-						return unitArray;
 					}
 
 					/**
