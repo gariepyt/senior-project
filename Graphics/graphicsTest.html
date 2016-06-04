@@ -27,10 +27,18 @@
 					//var vbuffer;
 					var program;
 
+					function resize()
+					{
+						canvas.width = window.innerWidth * 0.75;
+						canvas.height = window.innerHeight * 0.75;
+						//set up arrays
+						aspect = canvas.width / canvas.height;
+					}
+
 					function init()
 					{
 						canvas = document.getElementById("mycanvas");
-
+						resize();
 						/*========================= CAPTURE MOUSE EVENTS ========================= */
 						var drag=false;
 						var old_x, old_y;
@@ -87,7 +95,7 @@
 						{
 							keyboardEvent = e;
 						}
-
+						
 						canvas.addEventListener("mousedown", mouseDown, false);
 						canvas.addEventListener("mouseup", mouseUp, false);
 						canvas.addEventListener("mouseout", mouseUp, false);
@@ -129,9 +137,6 @@
 						if (!gl.getProgramParameter(program, gl.LINK_STATUS))
 							console.log(gl.getProgramInfoLog(program));
 
-						//set up arrays
-						aspect = canvas.width / canvas.height;
-
 						maxUnits = 100; //temp
 						var innerSelectionBox = new DrawGroup(10, [0, 0, 0, 1.0]);
 						var outerSelectionBox = new DrawGroup(10, [1.0, 1.0, 1.0, 1.0]);
@@ -153,7 +158,7 @@
 						r1 = new Resource([0, 0], "rectangle");
 						r2 = new Resource([-0.5, 0], "triangle");
 						r3 = new Resource([0.5, 0], "circle");
-
+						
 						b1 = new Base([0, -0.75], p1);
 						b2 = new Base([0, 0.75], p2);
 
@@ -365,6 +370,7 @@
 							{
 								combinedGroup.group[i].update()
 							}
+							p1.update();
 						}
 
 						function drawLoop()
@@ -764,6 +770,13 @@
 						}
 					}
 
+					Player.prototype.update = function()
+					{
+						document.getElementById("rock resource").innerHTML = "Rock: " + this.rock;
+						document.getElementById("scissors resource").innerHTML = "Scissors: " + this.scissors;
+						document.getElementById("paper resource").innerHTML = "Paper: " + this.paper;
+					}
+
 					/*========================================================  UNIT CLASS =======================================================*/
 
 					function Unit(center, shape, owner)
@@ -1054,7 +1067,7 @@
 					{
 						this.center = center;
 						this.gObject = new Rectangle(center, 0.25, 0.25);
-						this.health = 150000;
+						this.health = 15000;
 						this.owner = owner;
 					}					
 
@@ -1136,7 +1149,15 @@
 					Base.prototype.remove = function()
 					{
 						this.dGroup.remove(this);
-						console.log("GAME OVER!"); //TODO: display to user
+						if (this.owner.human)
+						{
+							document.getElementById('WinOrLose').innerHTML = "You lose!";
+						}
+						else
+						{
+							document.getElementById("WinOrLose").innerHTML = "You win!";
+						}
+						
 					}
 
 					Base.prototype.collisionTrigger = function(collideWith)
@@ -1616,9 +1637,14 @@
 			        }
 			</script>
 	</head>
-	<body onload="init()">
+	<body onload="init()" onresize="resize()">
 			<canvas id="mycanvas" width="1600" height="1000"></canvas>
 			<canvas id="mycanvas" width="800" height="500"></canvas>
+			<p id="WinOrLose"></p>
+			<p id="rock resource">0</p>
+			<p id="paper resource">0</p>
+			<p id="scissors resource">0</p>
+
 			<input type="button" id="save" value="Save Game">
 			<input type="button" id="load" value="Load Game">
 	</body>
