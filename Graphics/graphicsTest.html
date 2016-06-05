@@ -184,6 +184,12 @@
 
 							// outerSelectionBox.add(new Rectangle([-.25, -.25], .03, .03));
 
+							var temp_b1 = JSON.parse(Cookies.get('b1'));
+							var temp_b2 = JSON.parse(Cookies.get('b2'));
+
+							b1.health = temp_b1.health;
+							b2.health = temp_b2.health;
+
 							neutralResources.add(r1);
 							neutralResources.add(r2);
 							neutralResources.add(r3);
@@ -487,9 +493,9 @@
 								p1.loadUnit(p1.standard, p1_units[i]);
 							}
 
-							//for (i = 0; i < p2_units.length; i++) {
-							//	p2.loadUnit(p2.standard, p2_units[i]);
-							//}
+							for (i = 0; i < p2_units.length; i++) {
+								p2.loadUnit(p2.standard, p2_units[i]);
+							}
 
 							//p1.standard.group.push(p1_units[0]);
 
@@ -1818,6 +1824,5 @@
 			<canvas id="mycanvas" width="1600" height="1000"></canvas>
 			<canvas id="mycanvas" width="800" height="500"></canvas>
 			<input type="button" id="save" value="Save Game">
-			<input type="button" id="load" value="Load Game">
 	</body>
 </html>
