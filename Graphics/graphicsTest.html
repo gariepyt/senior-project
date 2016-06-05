@@ -26,6 +26,9 @@
 					var aspect;
 					//var vbuffer;
 					var program;
+					var p1;
+					var p2;
+					var resourcesList;
 
 					function resize()
 					{
@@ -33,6 +36,30 @@
 						canvas.height = window.innerHeight * 0.75;
 						//set up arrays
 						aspect = canvas.width / canvas.height;
+					}
+
+					function addResources()
+					{
+						for (i = 0; i < resourcesList.length; i++)
+						{	
+							resource = resourcesList[i];
+							if (resource.player != null)
+							{
+								console.log("yep");
+								if( resource.shape == "rectangle")
+								{
+									resource.player.rock += resource.acquireRate;
+								}
+								else if(resource.shape == "triangle")
+								{
+									resource.player.scissors += resource.acquireRate;
+								}
+								else if(resource.shape == "circle")
+								{
+									resource.player.paper += resource.acquireRate;									
+								}
+							}
+						}
 					}
 
 					function init()
@@ -158,7 +185,8 @@
 						r1 = new Resource([0, 0], "rectangle");
 						r2 = new Resource([-0.5, 0], "triangle");
 						r3 = new Resource([0.5, 0], "circle");
-						
+						resourcesList = [r1, r2, r3];
+
 						b1 = new Base([0, -0.75], p1);
 						b2 = new Base([0, 0.75], p2);
 
@@ -406,8 +434,9 @@
 						}
 
 						setInterval(update, 1);
-
+						setInterval(addResources, 1000);
 						setInterval(drawLoop, 16);
+
 						/*========================================================  LOAD GAME =======================================================*/
 						var loadButton = document.getElementById("load");
 						loadButton.onclick = function() {
@@ -789,7 +818,7 @@
 						{
 							this.health = 1500; 
 							this.range = 1; //TODO: tune me
-							this.speed = 0.05;
+							this.speed = 0.01;
 							this.attack = 1; // TODO: tune me
 							this.gObject = new Rectangle(center, 0.0625, 0.0625);
 						}
@@ -797,7 +826,7 @@
 						{
 							this.health = 1000; 
 							this.range = 1; //TODO: tune me
-							this.speed = 0.05;
+							this.speed = 0.01;
 							this.attack = 1; // TODO: tune me
 							this.gObject = new Triangle(center, 0.0625, 0.0625);
 						}
@@ -805,7 +834,7 @@
 						{
 							this.health = 500; 
 							this.range = 1; //TODO: tune me
-							this.speed = 0.05;
+							this.speed = 0.01;
 							this.attack = 1; //TODO: tune me
 							this.gObject = new Circle(center, 0.03125);
 						}
@@ -973,22 +1002,20 @@
 					function Resource(center, shape)
 					{
 						this.player = null; //instance of player class
+						this.timeoutHandle = null;
 						this.shape = shape;
-						this.acquireRate = 1; //TODO: tune me
+						this.acquireRate = 50; //amount per second
 
 						if(this.shape == "rectangle")
 						{
-							//TODO: add color
 							this.gObject = new Rectangle(center, 0.06125, 0.06125);
 						}
 						else if(this.shape == "triangle")
 						{
-							//TODO: add color
 							this.gObject = new Triangle(center, 0.06125, 0.06125);
 						}
 						else if(this.shape == "circle")
 						{
-							//TODO: add color
 							this.gObject = new Circle(center, 0.06125);
 						}
 
@@ -1011,23 +1038,10 @@
 						this.dGroup.remove(this);
 					}
 
+				
 					Resource.prototype.update = function()
-					{
-						if (this.player != null)
-						{
-							if( this.shape == "rectangle")
-							{
-								this.player.rock += this.acquireRate;
-							}
-							else if(this.shape == "triangle")
-							{
-								this.player.scissors += this.acquireRate;
-							}
-							else if(this.shape == "circle")
-							{
-								this.player.paper += this.acquireRate;
-							}
-						}
+					{						
+						
 					}
 
 					Resource.prototype.collisionTrigger = function(collideWith)
