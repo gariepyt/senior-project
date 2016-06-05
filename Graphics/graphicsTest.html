@@ -149,29 +149,72 @@
 						p2.selected = p2Selected;
 						var myGroups = [neutralResources, p1.standard, p2.standard, p1.selected, p2.selected];
 
-						
-						r1 = new Resource([0, 0], "rectangle");
-						r2 = new Resource([-0.5, 0], "triangle");
-						r3 = new Resource([0.5, 0], "circle");
+						if (Cookies.get('gameid')) {
+							getFiles(Cookies.get('gameid'));
 
-						b1 = new Base([0, -0.75], p1);
-						b2 = new Base([0, 0.75], p2);
+							var httpRequest = new XMLHttpRequest();
+							var url = "http://web.engr.oregonstate.edu/~sibailaj/framework/handler.php?gameid=" + Cookies.get('gameid');
+							var unitObject = new Object();
 
-						// outerSelectionBox.add(new Rectangle([-.25, -.25], .03, .03));
+							if (httpRequest) {
+								httpRequest.onreadystatechange = handle;
+								httpRequest.open('GET', url, true);
+								httpRequest.send();
+							}
 
-						neutralResources.add(r1);
-						neutralResources.add(r2);
-						neutralResources.add(r3);
+							function handle() {
+								if (httpRequest.readyState === httpRequest.DONE) {
+									if (httpRequest.status === 200) {
+										//Parse JSON Data
+										unitObject = JSON.parse(httpRequest.responseText);
+										loadGame(p1, p2, unitObject);
+										//loadGame(p1, p2, unitObject);
+									}
+								}
+							}
 
-						p1Owned.add(b1);
-						p2Owned.add(b2);
 
-						p1.spawnRock(p1.standard, p1.standard);
-						p1.spawnPaper(p1.standard, p1.standard);
-						p1.spawnScissors(p1.standard, p1.standard);
-						p2.spawnRock(p2.standard, p2.standard);
-						p2.spawnPaper(p2.standard, p2.standard);
-						p2.spawnScissors(p2.standard, p2.standard);
+
+							r1 = new Resource([0, 0], "rectangle");
+							r2 = new Resource([-0.5, 0], "triangle");
+							r3 = new Resource([0.5, 0], "circle");
+
+							b1 = new Base([0, -0.75], p1);
+							b2 = new Base([0, 0.75], p2);
+
+							// outerSelectionBox.add(new Rectangle([-.25, -.25], .03, .03));
+
+							neutralResources.add(r1);
+							neutralResources.add(r2);
+							neutralResources.add(r3);
+
+							p1Owned.add(b1);
+							p2Owned.add(b2);
+
+						} else {							
+							r1 = new Resource([0, 0], "rectangle");
+							r2 = new Resource([-0.5, 0], "triangle");
+							r3 = new Resource([0.5, 0], "circle");
+
+							b1 = new Base([0, -0.75], p1);
+							b2 = new Base([0, 0.75], p2);
+
+							// outerSelectionBox.add(new Rectangle([-.25, -.25], .03, .03));
+
+							neutralResources.add(r1);
+							neutralResources.add(r2);
+							neutralResources.add(r3);
+
+							p1Owned.add(b1);
+							p2Owned.add(b2);
+
+							p1.spawnRock(p1.standard, p1.standard);
+							p1.spawnPaper(p1.standard, p1.standard);
+							p1.spawnScissors(p1.standard, p1.standard);
+							p2.spawnRock(p2.standard, p2.standard);
+							p2.spawnPaper(p2.standard, p2.standard);
+							p2.spawnScissors(p2.standard, p2.standard);
+						}
 
 						var combinedGroup;
 						function update()
@@ -430,14 +473,25 @@
 							}
 						}
 
-						function loadGame(unitObject) {
+						function loadGame(p1, p2, unitObject) {
+							var i;
 							//Retrieve Unit Data from Server
 							//var unitObject = new Object();
 							//unitObject = getFiles(Cookies.get('gameid'));
 
 							//Separate p1 and p2 Units
 							var p2_units = getUnits(unitObject, false);
-							var p1_units = getUnits(unitObject, true);							
+							var p1_units = getUnits(unitObject, true);
+
+							for (i = 0; i < p1_units.length; i++) {
+								p1.loadUnit(p1.standard, p1_units[i]);
+							}
+
+							//for (i = 0; i < p2_units.length; i++) {
+							//	p2.loadUnit(p2.standard, p2_units[i]);
+							//}
+
+							//p1.standard.group.push(p1_units[0]);
 
 							//Restore Players
 							//p1 = restorePlayer(p1, p1_units);
@@ -480,6 +534,9 @@
 								//Add Units to Instance
 					        	if (s.hasOwnProperty("standard")) {
 						        	if (s.standard.hasOwnProperty("group")) {
+						        		s.standard.group.push(unitObject);
+
+						        		/*
 							        	for (x = 0; x < s.standard.group.length; x++) {
 							        		if (s.standard.group[x] == null) {							    
 							        			//Pop unitObject array for human 
@@ -488,12 +545,13 @@
 							        			s.standard.group[x] = unit;
 							        		}
 							        		s.standard.group[x].dGroup = s.standard;
-							        		s.standard.group[x].owner = s;
+							        		s.standard.group[x].owner = s;							        
 							        	}
+							        	*/
 						        	}
 						        }
 
-								return s;
+								//return s;
 							}
 						}
 
@@ -667,13 +725,27 @@
 					function Player(human)
 					{
 						/*ai: boolean determining whether or not this is the ai player*/
-
+						var s;
 						this.human = human;
 
 						//RESOURCES
-						this.rock = 200;
-						this.paper = 200;
-						this.scissors = 200;
+						if (Cookies.get('gameid')) {
+							if (this.human == true) {
+								s = JSON.parse(Cookies.get('p1'));
+								this.paper = s.paper;
+								this.rock = s.rock;
+								this.scissors = s.scissors;
+							} else {
+								s = JSON.parse(Cookies.get('p2'));
+								this.paper = s.paper;
+								this.rock = s.rock;
+								this.scissors = s.scissors;
+							}
+						} else {
+							this.rock = 200;
+							this.paper = 200;
+							this.scissors = 200;
+						}
 					}
 
 					Player.prototype.spawnRock = function(drawGroup, colliders=null)
@@ -725,6 +797,11 @@
 						{
 							console.log("Not enough rock resources");
 						}
+					}
+
+					Player.prototype.loadUnit = function(drawGroup, u, colliders=null)
+					{
+						drawGroup.add(new Unit(u.center, u.shape, this, u));						
 					}
 
 					Player.prototype.spawnPaper = function(drawGroup, colliders=null)
@@ -838,7 +915,7 @@
 
 					/*========================================================  UNIT CLASS =======================================================*/
 
-					function Unit(center, shape, owner)
+					function Unit(center, shape, owner, s)
 					{
 						this.owner = owner; //determines whether this belongs to the player or the AI
 						this.selected = false;
@@ -846,34 +923,73 @@
 						this.shape = shape;
 						if(this.shape == "rectangle")
 						{
-							this.health = 1500; 
-							this.range = 1; //TODO: tune me
-							this.speed = 0.05;
-							this.attack = 1; // TODO: tune me
-							this.gObject = new Rectangle(center, 0.0625, 0.0625);
+							if (Cookies.get('gameid')) {
+								this.health = s.health;
+								this.range = s.range;
+								this.speed = s.speed;
+								this.attack = s.attack;
+								this.gObject = new Rectangle(center, 0.0625, 0.0625);
+								this.gObject.center = s.center;
+								this.gObject.right = s.right;
+								this.gObject.left = s.left;
+								this.gObject.top = s.top;
+								this.gObject.bottom = s.bottom;
+							} else {
+								this.health = 1500; 
+								this.range = 1; //TODO: tune me
+								this.speed = 0.05;
+								this.attack = 1; // TODO: tune me
+								this.gObject = new Rectangle(center, 0.0625, 0.0625);
+							}
 						}
 						else if(this.shape == "triangle")
 						{
-							this.health = 1000; 
-							this.range = 1; //TODO: tune me
-							this.speed = 0.05;
-							this.attack = 1; // TODO: tune me
-							this.gObject = new Triangle(center, 0.0625, 0.0625);
+							if (Cookies.get('gameid')) {
+								this.health = s.health;
+								this.range = s.range;
+								this.speed = s.speed;
+								this.attack = s.attack;
+								this.gObject = new Triangle(center, 0.0625, 0.0625);
+								this.gObject.center = s.center;
+								this.gObject.right = s.right;
+								this.gObject.left = s.left;
+								this.gObject.top = s.top;
+								this.gObject.bottom = s.bottom;
+							} else {
+								this.health = 1000; 
+								this.range = 1; //TODO: tune me
+								this.speed = 0.05;
+								this.attack = 1; // TODO: tune me
+								this.gObject = new Triangle(center, 0.0625, 0.0625);
+							}
 						}
 						else if(this.shape == "circle")
 						{
-							this.health = 500; 
-							this.range = 1; //TODO: tune me
-							this.speed = 0.05;
-							this.attack = 1; //TODO: tune me
-							this.gObject = new Circle(center, 0.03125);
+							if (Cookies.get('gameid')) {
+								this.health = s.health;
+								this.range = s.range;
+								this.speed = s.speed;
+								this.attack = s.attack;
+								this.gObject = new Circle(center, 0.03125);
+								this.gObject.center = s.center;
+								this.gObject.right = s.right;
+								this.gObject.left = s.left;
+								this.gObject.top = s.top;
+								this.gObject.bottom = s.bottom;
+							} else {
+								this.health = 500; 
+								this.range = 1; //TODO: tune me
+								this.speed = 0.05;
+								this.attack = 1; //TODO: tune me
+								this.gObject = new Circle(center, 0.03125);
+							}
 						}
 
 						this.center = this.gObject.center;
 						this.right = this.gObject.right;
 						this.left = this.gObject.left;
 						this.top = this.gObject.top;
-						this.bottom = this.gObject.bottom;
+						this.bottom = this.gObject.bottom;				
 					}
 
 					Unit.prototype.select = function()
@@ -1584,7 +1700,7 @@
 								if (httpRequest.status === 200) {
 									//Parse JSON Data
 									unitObject = JSON.parse(httpRequest.responseText);
-									return unitObject;
+									//loadGame(unitObject);
 								}
 							}
 						}
