@@ -26,11 +26,46 @@
 					var aspect;
 					//var vbuffer;
 					var program;
+					var p1;
+					var p2;
+					var resourcesList;
+
+					function resize()
+					{
+						canvas.width = window.innerWidth * 0.75;
+						canvas.height = window.innerHeight * 0.75;
+						//set up arrays
+						aspect = canvas.width / canvas.height;
+					}
+
+					function addResources()
+					{
+						for (i = 0; i < resourcesList.length; i++)
+						{	
+							resource = resourcesList[i];
+							if (resource.player != null)
+							{
+								console.log("yep");
+								if( resource.shape == "rectangle")
+								{
+									resource.player.rock += resource.acquireRate;
+								}
+								else if(resource.shape == "triangle")
+								{
+									resource.player.scissors += resource.acquireRate;
+								}
+								else if(resource.shape == "circle")
+								{
+									resource.player.paper += resource.acquireRate;									
+								}
+							}
+						}
+					}
 
 					function init()
 					{
 						canvas = document.getElementById("mycanvas");
-
+						resize();
 						/*========================= CAPTURE MOUSE EVENTS ========================= */
 						var drag=false;
 						var old_x, old_y;
@@ -87,7 +122,7 @@
 						{
 							keyboardEvent = e;
 						}
-
+						
 						canvas.addEventListener("mousedown", mouseDown, false);
 						canvas.addEventListener("mouseup", mouseUp, false);
 						canvas.addEventListener("mouseout", mouseUp, false);
@@ -128,9 +163,6 @@
 
 						if (!gl.getProgramParameter(program, gl.LINK_STATUS))
 							console.log(gl.getProgramInfoLog(program));
-
-						//set up arrays
-						aspect = canvas.width / canvas.height;
 
 						maxUnits = 100; //temp
 						var innerSelectionBox = new DrawGroup(10, [0, 0, 0, 1.0]);
@@ -178,6 +210,7 @@
 							r1 = new Resource([0, 0], "rectangle");
 							r2 = new Resource([-0.5, 0], "triangle");
 							r3 = new Resource([0.5, 0], "circle");
+							resourcesList = [r1, r2, r3];
 
 							b1 = new Base([0, -0.75], p1);
 							b2 = new Base([0, 0.75], p2);
@@ -201,6 +234,7 @@
 							r1 = new Resource([0, 0], "rectangle");
 							r2 = new Resource([-0.5, 0], "triangle");
 							r3 = new Resource([0.5, 0], "circle");
+							resourcesList = [r1, r2, r3];
 
 							b1 = new Base([0, -0.75], p1);
 							b2 = new Base([0, 0.75], p2);
@@ -414,6 +448,7 @@
 							{
 								combinedGroup.group[i].update()
 							}
+							p1.update();
 						}
 
 						function drawLoop()
@@ -449,36 +484,10 @@
 						}
 
 						setInterval(update, 1);
-
+						setInterval(addResources, 1000);
 						setInterval(drawLoop, 16);
+
 						/*========================================================  LOAD GAME =======================================================*/
-						var loadButton = document.getElementById("load");
-						loadButton.onclick = function() {
-							if (Cookies.get('gameid')) {
-								var httpRequest = new XMLHttpRequest();
-								var url = "http://web.engr.oregonstate.edu/~sibailaj/framework/handler.php?gameid=" + Cookies.get('gameid');
-								var unitObject = new Object();
-
-								if (httpRequest) {
-									httpRequest.onreadystatechange = handle;
-									httpRequest.open('GET', url, true);
-									httpRequest.send();
-								}
-
-								function handle() {
-									if (httpRequest.readyState === httpRequest.DONE) {
-										if (httpRequest.status === 200) {
-											//Parse JSON Data
-											unitObject = JSON.parse(httpRequest.responseText);
-											loadGame(unitObject);
-										}
-									}
-								}
-							} else {
-								//Output Message Data Cannot Be Loaded
-							}
-						}
-
 						function loadGame(p1, p2, unitObject) {
 							var i;
 							//Retrieve Unit Data from Server
@@ -807,7 +816,7 @@
 
 					Player.prototype.loadUnit = function(drawGroup, u, colliders=null)
 					{
-						drawGroup.add(new Unit(u.center, u.shape, this, u));						
+						drawGroup.add(new Unit(u.center, u.shape, this, u, false));						
 					}
 
 					Player.prototype.spawnPaper = function(drawGroup, colliders=null)
@@ -919,9 +928,16 @@
 						}
 					}
 
+					Player.prototype.update = function()
+					{
+						document.getElementById("rock resource").innerHTML = "Rock: " + this.rock;
+						document.getElementById("scissors resource").innerHTML = "Scissors: " + this.scissors;
+						document.getElementById("paper resource").innerHTML = "Paper: " + this.paper;
+					}
+
 					/*========================================================  UNIT CLASS =======================================================*/
 
-					function Unit(center, shape, owner, s)
+					function Unit(center, shape, owner, s, newUnit)
 					{
 						this.owner = owner; //determines whether this belongs to the player or the AI
 						this.selected = false;
@@ -929,7 +945,7 @@
 						this.shape = shape;
 						if(this.shape == "rectangle")
 						{
-							if (Cookies.get('gameid')) {
+							if (Cookies.get('gameid') && (newUnit == false)) {
 								this.health = s.health;
 								this.range = s.range;
 								this.speed = s.speed;
@@ -942,15 +958,15 @@
 								this.gObject.bottom = s.bottom;
 							} else {
 								this.health = 1500; 
-								this.range = 1; //TODO: tune me
-								this.speed = 0.05;
-								this.attack = 1; // TODO: tune me
+								this.range = 1; 
+								this.speed = 0.001;
+								this.attack = 5; 
 								this.gObject = new Rectangle(center, 0.0625, 0.0625);
 							}
 						}
 						else if(this.shape == "triangle")
 						{
-							if (Cookies.get('gameid')) {
+							if (Cookies.get('gameid') && (newUnit == false)) {
 								this.health = s.health;
 								this.range = s.range;
 								this.speed = s.speed;
@@ -963,15 +979,15 @@
 								this.gObject.bottom = s.bottom;
 							} else {
 								this.health = 1000; 
-								this.range = 1; //TODO: tune me
-								this.speed = 0.05;
-								this.attack = 1; // TODO: tune me
+								this.range = 0.5; 
+								this.speed = 0.005;
+								this.attack = 3; 
 								this.gObject = new Triangle(center, 0.0625, 0.0625);
 							}
 						}
 						else if(this.shape == "circle")
 						{
-							if (Cookies.get('gameid')) {
+							if (Cookies.get('gameid') && (newUnit == false)) {
 								this.health = s.health;
 								this.range = s.range;
 								this.speed = s.speed;
@@ -984,13 +1000,14 @@
 								this.gObject.bottom = s.bottom;
 							} else {
 								this.health = 500; 
-								this.range = 1; //TODO: tune me
-								this.speed = 0.05;
-								this.attack = 1; //TODO: tune me
+								this.range = 0.25; 
+								this.speed = 0.01;
+								this.attack = 1; 
 								this.gObject = new Circle(center, 0.03125);
 							}
 						}
 
+						this.gObject.speed = this.speed;
 						this.center = this.gObject.center;
 						this.right = this.gObject.right;
 						this.left = this.gObject.left;
@@ -1154,22 +1171,20 @@
 					function Resource(center, shape)
 					{
 						this.player = null; //instance of player class
+						this.timeoutHandle = null;
 						this.shape = shape;
-						this.acquireRate = 1; //TODO: tune me
+						this.acquireRate = 50; //amount per second
 
 						if(this.shape == "rectangle")
 						{
-							//TODO: add color
 							this.gObject = new Rectangle(center, 0.06125, 0.06125);
 						}
 						else if(this.shape == "triangle")
 						{
-							//TODO: add color
 							this.gObject = new Triangle(center, 0.06125, 0.06125);
 						}
 						else if(this.shape == "circle")
 						{
-							//TODO: add color
 							this.gObject = new Circle(center, 0.06125);
 						}
 
@@ -1192,23 +1207,10 @@
 						this.dGroup.remove(this);
 					}
 
+				
 					Resource.prototype.update = function()
-					{
-						if (this.player != null)
-						{
-							if( this.shape == "rectangle")
-							{
-								this.player.rock += this.acquireRate;
-							}
-							else if(this.shape == "triangle")
-							{
-								this.player.scissors += this.acquireRate;
-							}
-							else if(this.shape == "circle")
-							{
-								this.player.paper += this.acquireRate;
-							}
-						}
+					{						
+						
 					}
 
 					Resource.prototype.collisionTrigger = function(collideWith)
@@ -1248,7 +1250,7 @@
 					{
 						this.center = center;
 						this.gObject = new Rectangle(center, 0.25, 0.25);
-						this.health = 150000;
+						this.health = 15000;
 						this.owner = owner;
 					}					
 
@@ -1330,7 +1332,15 @@
 					Base.prototype.remove = function()
 					{
 						this.dGroup.remove(this);
-						console.log("GAME OVER!"); //TODO: display to user
+						if (this.owner.human)
+						{
+							document.getElementById('WinOrLose').innerHTML = "You lose!";
+						}
+						else
+						{
+							document.getElementById("WinOrLose").innerHTML = "You win!";
+						}
+						
 					}
 
 					Base.prototype.collisionTrigger = function(collideWith)
@@ -1347,7 +1357,7 @@
 						this.width = width;
 						this.height = height;
 						this.setPos(center, width, height);
-						this.speed = 0.01; //TODO: tune for different shapes and stuff
+						this.speed = 0.01; 
 					}
 
 					Rectangle.prototype.draw = function(toDraw) //adds its info to the buffer
@@ -1435,7 +1445,7 @@
 						this.width = width;
 						this.height = height;
 						this.setPos(center, width, height);
-						this.speed = 0.01; //TODO: tune for different shapes and stuff
+						this.speed = 0.01; 
 					}
 
 					Triangle.prototype.draw = function(toDraw) //adds its info to the buffer
@@ -1546,7 +1556,7 @@
 						this.radius = radius;
 						this.setPos(center, radius);
 						this.selected = false;
-						this.speed = 0.01; //TODO: tune for different shapes and stuff
+						this.speed = 0.01; 
 						this.triangles=triangles; //number of triangles used to create a circle
 					}
 
@@ -1820,9 +1830,15 @@
 
 			</script>
 	</head>
-	<body onload="init()">
+	<body onload="init()" onresize="resize()">
+			<p id="Controls">Spawn rock: 'q', Spawn paper 'w', Spawn scissors 'e', Left click and drag to select, right click to move</p>
 			<canvas id="mycanvas" width="1600" height="1000"></canvas>
 			<canvas id="mycanvas" width="800" height="500"></canvas>
+			<p id="WinOrLose"></p>
+			<p id="rock resource">0</p>
+			<p id="paper resource">0</p>
+			<p id="scissors resource">0</p>
+
 			<input type="button" id="save" value="Save Game">
 	</body>
 </html>
