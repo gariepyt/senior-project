@@ -817,28 +817,28 @@
 						if(this.shape == "rectangle")
 						{
 							this.health = 1500; 
-							this.range = 1; //TODO: tune me
-							this.speed = 0.01;
-							this.attack = 1; // TODO: tune me
-							this.gObject = new Rectangle(center, 0.0625, 0.0625);
+							this.range = 1; 
+							this.speed = 0.001;
+							this.attack = 1; 
+							this.gObject = new Rectangle(center, 0.0625, 0.0625);						
 						}
 						else if(this.shape == "triangle")
 						{
 							this.health = 1000; 
-							this.range = 1; //TODO: tune me
-							this.speed = 0.01;
-							this.attack = 1; // TODO: tune me
+							this.range = 0.5; 
+							this.speed = 0.005;
+							this.attack = 1; 
 							this.gObject = new Triangle(center, 0.0625, 0.0625);
 						}
 						else if(this.shape == "circle")
 						{
 							this.health = 500; 
-							this.range = 1; //TODO: tune me
+							this.range = 0.25; 
 							this.speed = 0.01;
-							this.attack = 1; //TODO: tune me
+							this.attack = 1; 
 							this.gObject = new Circle(center, 0.03125);
 						}
-
+						this.gObject.speed = this.speed;
 						this.center = this.gObject.center;
 						this.right = this.gObject.right;
 						this.left = this.gObject.left;
@@ -1188,7 +1188,7 @@
 						this.width = width;
 						this.height = height;
 						this.setPos(center, width, height);
-						this.speed = 0.01; //TODO: tune for different shapes and stuff
+						this.speed = 0.01; 
 					}
 
 					Rectangle.prototype.draw = function(toDraw) //adds its info to the buffer
@@ -1276,7 +1276,7 @@
 						this.width = width;
 						this.height = height;
 						this.setPos(center, width, height);
-						this.speed = 0.01; //TODO: tune for different shapes and stuff
+						this.speed = 0.01; 
 					}
 
 					Triangle.prototype.draw = function(toDraw) //adds its info to the buffer
@@ -1387,7 +1387,7 @@
 						this.radius = radius;
 						this.setPos(center, radius);
 						this.selected = false;
-						this.speed = 0.01; //TODO: tune for different shapes and stuff
+						this.speed = 0.01; 
 						this.triangles=triangles; //number of triangles used to create a circle
 					}
 
@@ -1652,6 +1652,7 @@
 			</script>
 	</head>
 	<body onload="init()" onresize="resize()">
+			<p id="Controls">Spawn rock: 'q', Spawn paper 'w', Spawn scissors 'e', Left click and drag to select, right click to move</p>
 			<canvas id="mycanvas" width="1600" height="1000"></canvas>
 			<canvas id="mycanvas" width="800" height="500"></canvas>
 			<p id="WinOrLose"></p>
