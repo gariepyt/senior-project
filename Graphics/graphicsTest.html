@@ -633,6 +633,13 @@
 							}
 						}
 
+				        /*========================================================  NEW GAME =======================================================*/
+				        var newButton = document.getElementById('new');
+				        newButton.onclick = function() {
+				        	Cookies.remove('gameid');
+				        	document.location.reload(true);
+				        }
+
 				        /*========================================================  SAVE GAME =======================================================*/
 				        var saveButton = document.getElementById("save");
 				        var gameid;
@@ -2049,6 +2056,7 @@
 			<p id="rock resource">0</p>
 			<p id="paper resource">0</p>
 			<p id="scissors resource">0</p>
+			<input type="button" class="btn btn-lg btn-default" id="new" value="New Game">
 			<input type="button" class="btn btn-lg btn-default" id="save" value="Save Game">				
 			</div>
 
