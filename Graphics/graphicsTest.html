@@ -1,5 +1,46 @@
  <html>
-	<head>           
+	<head>
+		    <meta charset="utf-8">
+		    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+		    <meta name="viewport" content="width=device-width, initial-scale=1">
+		    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+		    <meta name="description" content="">
+		    <meta name="author" content="">
+		    <link rel="icon" href="icon.ico">
+
+		    <title>Rock-Paper-Scissors RTS</title>
+
+		    <!-- Bootstrap core CSS -->
+		    <link href="css/bootstrap.min.css" rel="stylesheet">
+		    <!-- Bootstrap theme -->
+		    <link href="css/bootstrap-theme.min.css" rel="stylesheet">
+
+		    <!-- Custom styles for this template -->
+		    <link href="css/theme.css" rel="stylesheet">
+
+		    <!-- Custom styles for this template -->
+		    <link href="css/starter-template.css" rel="stylesheet">
+
+		    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+		    <!--[if lt IE 9]>
+		      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+		      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+		    <![endif]-->
+		    <!--Popup Window Code -->
+		    <script type="text/javascript"> 
+		      function popup(mylink, windowname) { 
+		        if (!window.focus) {
+		          return true;
+		        }        
+		        var href; 
+		        if (typeof(mylink) == 'string') {
+		          href=mylink;
+		        }  else {
+		          href=mylink.href;
+		        }
+		        window.open(href, windowname, 'width=600,height=300,scrollbars=yes'); 
+		        return false; }
+		    </script>           
 			<script id="vertex" type="x-shader">
 				attribute vec2 aVertexPosition;
 				void main() 
@@ -1975,6 +2016,31 @@
 			</script>
 	</head>
 	<body onload="init()" onresize="resize()">
+		    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+		    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+		    <!-- Include all compiled plugins (below), or include individual files as needed -->
+		    <script src="js/bootstrap.min.js"></script>
+
+		    <!-- Fixed navbar -->
+		    <nav class="navbar navbar-inverse navbar-fixed-top">
+		      <div class="container">
+		        <div class="navbar-header">
+		          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+		            <span class="sr-only">Toggle navigation</span>
+		            <span class="icon-bar"></span>
+		            <span class="icon-bar"></span>
+		            <span class="icon-bar"></span>
+		          </button>
+		          <a class="navbar-brand" href="#">Rock-Paper-Scissors RTS</a>
+		        </div>
+		        <div id="navbar" class="navbar-collapse collapse">
+		          <ul class="nav navbar-nav navbar-right">
+		            <li><a href="instructions.html" onClick="return popup(this, 'notes')">Instructions</a></li>
+		          </ul>
+		        </div><!--/.nav-collapse -->
+		      </div>
+		    </nav>
+
 			<p id="Controls">Spawn rock: 'q', Spawn paper 'w', Spawn scissors 'e', Left click and drag to select, right click to move</p>
 			<canvas id="mycanvas" width="1600" height="1000"></canvas>
 			<canvas id="mycanvas" width="800" height="500"></canvas>
@@ -1983,7 +2049,7 @@
 			<p id="rock resource">0</p>
 			<p id="paper resource">0</p>
 			<p id="scissors resource">0</p>
-			<input type="button" id="save" value="Save Game">				
+			<input type="button" class="btn btn-lg btn-default" id="save" value="Save Game">				
 			</div>
 
 
