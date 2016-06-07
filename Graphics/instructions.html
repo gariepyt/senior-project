@@ -21,7 +21,41 @@
   <body>
     <div class="container">
       <h1>Instructions</h1>
-      <p>Here are the instructions...</p>
+      <h2>Starting the game</h2>
+      <p>To start the game, go to: http://web.engr.oregonstate.edu/~gariepyt/senior-project/Graphics/graphicsTest.html</p>
+
+      <p>From here, a pop-up will appear asking for your difficulty setting. The player will be allowed to type a number in range 1 - 5, 1 being easy and 5 being hard. If they do not enter a number out of range, they will be asked to enter a correct number again. This is the same for if they attempt to enter a string of characters instead of numbers.</p>
+
+      <p>Once a difficulty has been selected, the game will load and the player will be able to start moving their units.</p>
+
+      <h2>Playing the Game</h2>
+      <h3>Selecting Units</h3>
+      <p>To select units, hold the left mouse button down, drag the mouse over the units you would like the select, and release the mouse button.</p>
+      <h3>Moving Units</h3>
+      <p>To move characters that you have selected, right click on the map to where you want those units to go.</p>
+      <h3>Creating New Units</h3>
+      <p>To create a new unit, the player will need at least 50 of that unit type’s resource in order to spawn a new unit. A list of the player’s current inventory of resources can be found to the right of the page, above the “Save Game” button.</p>
+      <p>To create a new rock unit, hit the ‘q’ button.</p>
+      <p>To create a new paper unit, hit the ‘w’ button.</p>
+      <p>To create a new scissors unit, hit the ‘e’ unit.</p>
+      <h3>Collecting Resources</h3>
+      <p>There are three white units on the board. These are the resource stations that the user can use in order to collect resources in order to create more units. Each station is shaped similar to the resource that they provide: square for rock, circle for paper, and triangle for scissors. To collect these units, move a unit so that it passes over the station. The station will change to blue and automatically add resources to the player’s inventory.</p>
+      <p>The player’s inventory appears to the right of the screen, next to the “Save Game” button.</p>
+      <h3>Attacking Enemy Units</h3>
+      <p>Units will automatically attack one another when they come into range. When a unit is attacked enough, it will die and no longer be rendered on screen. </p>
+      <h3>Attacking Enemy Base</h3>
+      <p>Similarly to units, the enemy base will be attacked when the player’s units move into range. It has a lot of health, but when it is destroyed, the player wins the game. </p>
+
+      <h2>Saving and Loading the Game</h2>
+      <p>To save the game, click on the “Save Game” button on the right of the screen. The game state will be saved and uploaded to the server. A cookie will be dropped in order to remember who the player is in order to gather the right game state for further use.</p>
+      <p>To load the game, simply refresh the page.</p>
+
+      <h2>Ending the Game</h2>
+      <p>To win the game, destroy the enemy base. When the enemy base is destroyed, a pop-up appears notifying the player that they have won the game. A message also appears above the player’s inventory informing the player that they have won.</p>
+      <p>To lose the game, have the enemy destroy the player’s base. When the player’s base is destroyed, a pop-up appears notifying the player that they have lost the game. A message also appears above the player’s inventory informing the player that they have lost.</p>
+
+      <h2>Starting a New Game</h2>
+      <p>To start a new game, hit the “New Game” button next to the “Save Game” button.</p>
     </div>
 
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
